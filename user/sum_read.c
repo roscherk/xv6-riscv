@@ -2,7 +2,7 @@
 #include "kernel/stat.h"
 #include "user/user.h"
 
-int read_number(int* result) {
+int read_number(int* result, char ending) {
     printf("DEBUG: entering read_number...\n");
     const unsigned int BUFFER_SIZE = 33;  // по 16 байт на числа + один байт на \0 или \n
     char buffer[BUFFER_SIZE];
@@ -15,11 +15,16 @@ int read_number(int* result) {
             break;
         }
         if (buffer[i] == '\n' || buffer[i] == ' ') {
-            printf("\tDEBUG: all good\n");
-            status = 0;
+            if (buffer[i] == ending) {
+                printf("\tDEBUG: all good\n");
+                status = 0;
+            } else {
+                printf("\tDEBUG: wrong format\n");
+                status = -2;
+            }
             break;
         }
-        if (i == BUFFER_SIZE - 1 && buffer[i] != '\n' && buffer[i] != ' ') {
+        if (i == BUFFER_SIZE - 1 && buffer[i] != ending) {
             printf("\tDEBUG: buffer overflow\n");
             status = -3;
         }
@@ -52,9 +57,9 @@ void check_status(int status) {
 int main(int _, char* __[]) {
     int number1, number2, status;
 
-    status = read_number(&number1);
+    status = read_number(&number1, ' ');
     check_status(status);
-    status = read_number(&number2);
+    status = read_number(&number2, '\n');
     check_status(status);
 
     printf("DEBUG: |%d %d|\n", number1, number2);
