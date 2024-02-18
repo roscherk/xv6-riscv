@@ -65,6 +65,6 @@ int main(int _, char* __[]) {
     check_status(status);
 
     printf("DEBUG: |%d %d|\n", number1, number2);
-    printf("%d\n", number1 + number2);
+    printf("%d\n", sum(number1, number2));  // используем системный вызов
     exit(0);
 }
