@@ -35,7 +35,7 @@ void check_status(int status) {
             fprintf(2, "Error: IO error\n");
             exit(1);
         case -2:
-            fprintf(2, "Error: format error. Enter two integers, separated by space.\n");
+            fprintf(2, "Error: format error. Enter two integers separated by a space.\n");
             exit(1);
         case -3:
             fprintf(2, "Error: buffer overflow, integer too long\n");
