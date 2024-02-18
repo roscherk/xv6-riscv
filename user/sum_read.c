@@ -1,9 +1,8 @@
 #include "kernel/types.h"
-#include "kernel/stat.h"
 #include "user/user.h"
 
 int read_number(int* result, char ending) {
-    const unsigned int BUFFER_SIZE = 33;  // по 16 байт на числа + один байт на \0 или \n
+    const unsigned int BUFFER_SIZE = 10;  // 9 байт на число + 1 байт на разделитель
     char buffer[BUFFER_SIZE];
     int status = -2, i;
     for (i = 0; i < BUFFER_SIZE; ++i) {
