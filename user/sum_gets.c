@@ -1,6 +1,7 @@
 #include "kernel/types.h"
 #include "user/user.h"
 
+// 1b
 int get_numbers(int* number1, int* number2) {
     const unsigned int BUFFER_SIZE = 20;  // по 9 байт на числа + 2 байта на пробел и \n
     char buffer[BUFFER_SIZE];

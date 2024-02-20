@@ -1,6 +1,7 @@
 #include "kernel/types.h"
 #include "user/user.h"
 
+// 1c
 int read_number(int* result, char ending) {
     const unsigned int BUFFER_SIZE = 10;  // 9 байт на число + 1 байт на разделитель
     char buffer[BUFFER_SIZE];

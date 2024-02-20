@@ -1,3 +1,5 @@
+# 1 a
+
 .data                                           # Data section
 
 msg_read_error:     .asciz "Error: IO error\n"  # IO error message
