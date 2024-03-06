@@ -3,8 +3,7 @@
 #include "user/user.h"
 
 int main(int argc, char** argv) {
-
-    // Usage: task1 [-b]
+    // Usage: sleep [-b]
     // defaults to variant a
 
     int go_b = 0;
