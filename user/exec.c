@@ -5,8 +5,8 @@
 
 int main(int argc, char** argv) {
     int pipefd[2];
+    int status;
     pipe(pipefd);
-    const int buffer_size = 22;
     int pid = fork();
     if (pid < 0) {
         fprintf(2, "Error: fork() finished with error.\n");
@@ -17,17 +17,24 @@ int main(int argc, char** argv) {
         dup(pipefd[0]);
         close(pipefd[0]);
         char *argv[] = {"/wc", 0};
-        exec("/wc", argv);
+        if (exec("/wc", argv) < 0) {
+            fprintf(2, "Error: exec(...) finished with error.\n");
+            exit(1);
+        }
     }
 
     close(pipefd[0]);   // в родительском процессе только пишем
-    char buf[buffer_size];
-    int status, arg_length;
+    int arg_length;
     for (int i = 1; i < argc; ++i) {
         arg_length = strlen(argv[i]);
-        strcpy(buf, argv[i]);
-        buf[arg_length] = '\n';
-        write(pipefd[1], buf, arg_length + 1);
+        if (write(pipefd[1], argv[i], arg_length) != arg_length) {
+            write(2, "Error: write(...) error\n", 25);
+            exit(2);
+        }
+        if (write(pipefd[1], "\n", 1) != 1) {
+            write(2, "Error: write(...) error\n", 25);
+            exit(2);
+        }
     }
     close(pipefd[1]);
     wait(&status);

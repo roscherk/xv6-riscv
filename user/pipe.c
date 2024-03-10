@@ -21,19 +21,23 @@ int main(int argc, char** argv) {
         close(pipefd[0]);
         if (read_status < 0) {
             write(2, "Error: read(...) error\n", 14);
-            exit(4);
+            exit(2);
         }
         exit(0);
     }
 
     close(pipefd[0]);   // в родительском процессе только пишем
-    char buf[buffer_size];
     int status, arg_length;
     for (int i = 1; i < argc; ++i) {
         arg_length = strlen(argv[i]);
-        strcpy(buf, argv[i]);
-        buf[arg_length] = '\n';
-        write(pipefd[1], buf, arg_length + 1);
+        if (write(pipefd[1], argv[i], arg_length) != arg_length) {
+            write(2, "Error: write(...) error\n", 25);
+            exit(2);
+        }
+        if (write(pipefd[1], "\n", 1) != 1) {
+            write(2, "Error: write(...) error\n", 25);
+            exit(2);
+        }
     }
     close(pipefd[1]);
     wait(&status);
