@@ -4,6 +4,7 @@
 #include "riscv.h"
 #include "spinlock.h"
 #include "proc.h"
+#include "procinfo.h"
 #include "defs.h"
 
 struct cpu cpus[NCPU];
@@ -26,6 +27,57 @@ extern char trampoline[]; // trampoline.S
 // must be acquired before any p->lock.
 struct spinlock wait_lock;
 
+int ps_listinfo(void) {
+    uint64 plist;
+    int lim;
+    argaddr(0, &plist);
+    argint(1, &lim);
+
+    int proc_count = 0;
+
+    for (struct proc* proc_ptr = proc; proc_ptr < &proc[NPROC]; ++proc_ptr) {
+        acquire(&proc_ptr->lock);
+        if (proc_ptr->state != UNUSED) {
+            proc_count++;
+            if (plist != 0) {
+                if (proc_count > lim) {
+                    release(&(proc_ptr->lock));
+                    return -1;
+                }
+                struct procinfo proc_info;
+
+                switch (proc_ptr->state) {
+                    case UNUSED:
+                        proc_info.state = MY_UNUSED;
+                    case USED:
+                        proc_info.state = MY_USED;
+                    case SLEEPING:
+                        proc_info.state = MY_SLEEPING;
+                    case RUNNABLE:
+                        proc_info.state = MY_RUNNABLE;
+                    case RUNNING:
+                        proc_info.state = MY_RUNNING;
+                    case ZOMBIE:
+                        proc_info.state = MY_ZOMBIE;
+                }
+                strncpy(proc_info.name, proc_ptr->name, 16);
+                acquire(&wait_lock);
+                proc_info.pid = proc_ptr->pid;
+                release(&wait_lock);
+                if (copyout(myproc()->pagetable,
+                            (uint64)(plist + proc_count),
+                            (char *)&proc_info,
+                            sizeof(proc_info)) < 0) {
+                    release(&proc_ptr->lock);
+                    return -1;
+                }
+            }
+        }
+        release(&proc_ptr->lock);
+    }
+    return proc_count;
+}
+
 // Allocate a page for each process's kernel stack.
 // Map it high in memory, followed by an invalid
 // guard page.
@@ -33,7 +85,7 @@ void
 proc_mapstacks(pagetable_t kpgtbl)
 {
   struct proc *p;
-  
+
   for(p = proc; p < &proc[NPROC]; p++) {
     char *pa = kalloc();
     if(pa == 0)
@@ -48,7 +100,7 @@ void
 procinit(void)
 {
   struct proc *p;
-  
+
   initlock(&pid_lock, "nextpid");
   initlock(&wait_lock, "wait_lock");
   for(p = proc; p < &proc[NPROC]; p++) {
@@ -93,7 +145,7 @@ int
 allocpid()
 {
   int pid;
-  
+
   acquire(&pid_lock);
   pid = nextpid;
   nextpid = nextpid + 1;
@@ -236,7 +288,7 @@ userinit(void)
 
   p = allocproc();
   initproc = p;
-  
+
   // allocate one user page and copy initcode's instructions
   // and data into it.
   uvmfirst(p->pagetable, initcode, sizeof(initcode));
@@ -372,7 +424,7 @@ exit(int status)
 
   // Parent might be sleeping in wait().
   wakeup(p->parent);
-  
+
   acquire(&p->lock);
 
   p->xstate = status;
@@ -428,7 +480,7 @@ wait(uint64 addr)
       release(&wait_lock);
       return -1;
     }
-    
+
     // Wait for a child to exit.
     sleep(p, &wait_lock);  //DOC: wait-sleep
   }
@@ -446,7 +498,7 @@ scheduler(void)
 {
   struct proc *p;
   struct cpu *c = mycpu();
-  
+
   c->proc = 0;
   for(;;){
     // Avoid deadlock by ensuring that devices can interrupt.
@@ -536,7 +588,7 @@ void
 sleep(void *chan, struct spinlock *lk)
 {
   struct proc *p = myproc();
-  
+
   // Must acquire p->lock in order to
   // change p->state and then call sched.
   // Once we hold p->lock, we can be
@@ -615,7 +667,7 @@ int
 killed(struct proc *p)
 {
   int k;
-  
+
   acquire(&p->lock);
   k = p->killed;
   release(&p->lock);
