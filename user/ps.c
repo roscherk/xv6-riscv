@@ -6,7 +6,7 @@
 int main() {
     int buffer_size = 8;
     int success = 0;
-    int processes = 0;
+    int processes;
     while (!success) {
         struct procinfo buffer[buffer_size];
         processes = ps_listinfo(buffer, buffer_size);
@@ -21,18 +21,25 @@ int main() {
                 switch (buffer[i].state) {
                     case MY_UNUSED:
                         state_str = "MY_UNUSED";
+                        break;
                     case MY_USED:
                         state_str = "MY_USED";
+                        break;
                     case MY_SLEEPING:
                         state_str = "MY_SLEEPING";
+                        break;
                     case MY_RUNNABLE:
                         state_str = "MY_RUNNABLE";
+                        break;
                     case MY_RUNNING:
                         state_str = "MY_RUNNING";
+                        break;
                     case MY_ZOMBIE:
                         state_str = "MY_ZOMBIE";
+                        break;
                 }
-                printf("Name: `%s`, PID: %d, State: %s\n", buffer[i].name, buffer[i].pid, state_str);
+                printf("Name: `%s`, PID: %d, Parent ID: %d, State: %s\n", buffer[i].name, buffer[i].pid,
+                       buffer[i].parent_id, state_str);
             }
         }
         buffer_size *= 2;
