@@ -8,6 +8,15 @@ struct spinlock;
 struct sleeplock;
 struct stat;
 struct superblock;
+struct mutex;
+
+// mutex.c
+void            mtable_init(void);
+int             mutex_create(void);
+int             mutex_dup(int);
+int             mutex_lock(int);
+int             mutex_unlock(int);
+int             mutex_release(int);
 
 // bio.c
 void            binit(void);

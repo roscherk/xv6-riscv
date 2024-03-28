@@ -308,6 +308,11 @@ fork(void)
       np->ofile[i] = filedup(p->ofile[i]);
   np->cwd = idup(p->cwd);
 
+  // делаем то же самое, что и с открытыми файлами
+  for (int i = 0; i < NOMUTEX; ++i)
+      if (p->omutex[i])
+          np->omutex[i] = mutex_dup(p->omutex[i]);
+
   safestrcpy(np->name, p->name, sizeof(p->name));
 
   pid = np->pid;
@@ -358,6 +363,13 @@ exit(int status)
       fileclose(f);
       p->ofile[fd] = 0;
     }
+  }
+
+  for (int i = 0; i < NOMUTEX; ++i) {
+      if (p->omutex[i]) {
+          mutex_release(p->omutex[i]);
+          p->omutex[i] = 0;
+      }
   }
 
   begin_op();
