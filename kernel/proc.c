@@ -309,9 +309,14 @@ fork(void)
   np->cwd = idup(p->cwd);
 
   // делаем то же самое, что и с открытыми файлами
-  for (int i = 0; i < NOMUTEX; ++i)
-      if (p->omutex[i])
+  for (i = 0; i < NOMUTEX; ++i) {
+      printf("p->omutex[%d] = %d\n", i, p->omutex[i]);
+      if (p->omutex[i]) {
+          printf("duplicating... ");
           np->omutex[i] = mutex_dup(p->omutex[i]);
+          printf("done! p->omutex[%d] = %d\n", i, p->omutex[i]);
+      }
+  }
 
   safestrcpy(np->name, p->name, sizeof(p->name));
 
@@ -367,7 +372,7 @@ exit(int status)
 
   for (int i = 0; i < NOMUTEX; ++i) {
       if (p->omutex[i]) {
-          mutex_release(p->omutex[i]);
+          mutex_rem(p->omutex[i]);
           p->omutex[i] = 0;
       }
   }

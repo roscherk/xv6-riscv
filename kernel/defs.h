@@ -13,10 +13,11 @@ struct mutex;
 // mutex.c
 void            mtable_init(void);
 int             mutex_create(void);
-int             mutex_dup(int);
 int             mutex_lock(int);
 int             mutex_unlock(int);
 int             mutex_release(int);
+struct mutex*   mutex_dup(struct mutex*);
+void            mutex_rem(struct mutex*);
 
 // bio.c
 void            binit(void);
