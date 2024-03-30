@@ -370,10 +370,11 @@ exit(int status)
     }
   }
 
-  for (int i = 0; i < NOMUTEX; ++i) {
-      if (p->omutex[i]) {
-          mutex_rem(p->omutex[i]);
-          p->omutex[i] = 0;
+  for (int md = 0; md < NOMUTEX; ++md) {
+      if (p->omutex[md]) {
+          struct mutex* mutex = p->omutex[md];
+          mutex_close(mutex);
+          p->omutex[md] = 0;
       }
   }
 
