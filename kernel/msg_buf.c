@@ -4,6 +4,7 @@
 #include "param.h"
 #include "spinlock.h"
 #include "riscv.h"
+#include "proc.h"
 #include "defs.h"
 #include "msg_buf.h"
 
@@ -12,18 +13,26 @@ struct msg_buf buffer;
 
 void msg_buf_init(void) {
   buffer.head = buffer.tail = 0;
+  buffer.data[buffer.head] = '\n';
   initlock(&buffer.lock, "msg_buf lock");
 }
 
 void write_byte(char byte) {
+//  printf("DEBUG(0): byte = %d, head = %d, tail = %d\n", byte, buffer.head, buffer.tail);
   if (buffer.tail == buffer.head) { // кольцо замкнулось
-    buffer.head++; // освобождаем место под новый символ
-    while (buffer.data[buffer.head] != '\n') { // затираем первое сообщение
+//    printf("DEBUG(1):\t     buffer.tail == buffer.head\n");
+//    buffer.head++; // освобождаем место под новый символ
+//    buffer.head %= BUFSIZE;
+//    printf("DEBUG(2):\t     head = %d, tail = %d\n", buffer.head, buffer.tail);
+    while (buffer.data[buffer.head] != 0 && buffer.data[buffer.head] != '\n') { // затираем первое сообщение
       buffer.data[buffer.head++] = 0;
+      buffer.head %= BUFSIZE;
+//      printf("DEBUG(3):\t     head = %d, tail = %d\n", buffer.head, buffer.tail);
     }
   }
   buffer.data[buffer.tail++] = byte;
   buffer.tail %= BUFSIZE;
+//  printf("DEBUG(4):\t     head = %d, tail = %d\n", buffer.head, buffer.tail);
 }
 
 // >>> printf.c
@@ -63,7 +72,7 @@ static void printptr(uint64 x) {
   }
 }
 
-void pr_msg(char *fmt, ...) {
+void pr_msg(const char *fmt, ...) {
   va_list ap;
   int i, c;
   char *s;
@@ -75,7 +84,6 @@ void pr_msg(char *fmt, ...) {
   }
 
   write_byte('[');
-  write_byte(' ');
   acquire(&tickslock);
   printint(ticks, 10, 0);
   release(&tickslock);
@@ -127,6 +135,43 @@ void pr_msg(char *fmt, ...) {
 // <<< printf.c
 
 uint64 sys_dmesg(void) {
+  uint64 buf;
+  int copied = 0;
+  argaddr(0, &buf);
 
+  printf("DEBUG(5): head = %d, tail = %d\n", buffer.head, buffer.tail);
+
+  acquire(&buffer.lock);
+
+  if (buffer.head == buffer.tail) { // буфер закольцевался, выдаём весь
+    if (copyout(myproc()->pagetable, buf, buffer.data, BUFSIZE) < 0) {
+      release(&buffer.lock);
+      return -1;
+    }
+  } else {
+    while (buffer.head != buffer.tail) {
+      printf("DEBUG(6): copied = %d, head = %d, tail = %d\n", copied, buffer.head, buffer.tail);
+      if (copyout(myproc()->pagetable, buf + copied, &buffer.data[buffer.head], 1) < 0) {
+        release(&buffer.lock);
+        return -1;
+      }
+      copied++;
+      buffer.head++;
+      buffer.head %= BUFSIZE;
+    }
+  }
+  printf("DEBUG(7): итс окэй, copied = %d\n", copied);
+
+
+  char zero = 0;
+  if (copyout(myproc()->pagetable, buf + copied, &zero, 1) < 0) {
+    printf("Прощай, немытая Россия...\n");
+    release(&buffer.lock);
+    return -1;
+  }
+  printf("DEBUG(8): итс окэй!\n", copied);
+
+  release(&buffer.lock);
+  printf("DEBUG(9): итс окэй!!!\n", copied);
   return 0;
 }

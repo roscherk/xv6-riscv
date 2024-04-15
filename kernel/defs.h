@@ -12,7 +12,7 @@ struct msg_buf;
 
 // msg_buf.c
 void            msg_buf_init(void);
-void            pr_mgs(const char* fmt, ...);
+void            pr_msg(const char* fmt, ...);
 
 // bio.c
 void            binit(void);
