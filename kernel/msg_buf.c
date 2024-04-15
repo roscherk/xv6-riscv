@@ -26,7 +26,7 @@ void write_byte(char byte) {
   buffer.tail %= BUFSIZE;
 }
 
-// из printf.c
+// >>> printf.c
 static char digits[] = "0123456789abcdef";
 
 static void printint(int xx, int base, int sign) {
@@ -58,19 +58,29 @@ static void printptr(uint64 x) {
   int i;
   consputc('0');
   consputc('x');
-  for (i = 0; i < (sizeof(uint64) * 2); i++, x <<= 4)
+  for (i = 0; i < (sizeof(uint64) * 2); i++, x <<= 4) {
     consputc(digits[x >> (sizeof(uint64) * 8 - 4)]);
+  }
 }
 
 void pr_msg(char *fmt, ...) {
   va_list ap;
-  int i, c, locking;
+  int i, c;
   char *s;
 
   acquire(&buffer.lock);
 
-  if (fmt == 0)
+  if (fmt == 0) {
     panic("null fmt");
+  }
+
+  write_byte('[');
+  write_byte(' ');
+  acquire(&tickslock);
+  printint(ticks, 10, 0);
+  release(&tickslock);
+  write_byte(']');
+  write_byte(' ');
 
   va_start(ap, fmt);
   for (i = 0; (c = fmt[i] & 0xff) != 0; i++) {
@@ -79,8 +89,9 @@ void pr_msg(char *fmt, ...) {
       continue;
     }
     c = fmt[++i] & 0xff;
-    if (c == 0)
+    if (c == 0) {
       break;
+    }
     switch (c) {
     case 'd':
       printint(va_arg(ap, int), 10, 1);
@@ -92,10 +103,12 @@ void pr_msg(char *fmt, ...) {
       printptr(va_arg(ap, uint64));
       break;
     case 's':
-      if ((s = va_arg(ap, char *)) == 0)
+      if ((s = va_arg(ap, char *)) == 0) {
         s = "(null)";
-      for (; *s; s++)
+      }
+      for (; *s; s++) {
         write_byte(*s);
+      }
       break;
     case '%':
       write_byte('%');
@@ -108,27 +121,12 @@ void pr_msg(char *fmt, ...) {
     }
   }
   va_end(ap);
-
+  write_byte('\n');
   release(&buffer.lock);
 }
+// <<< printf.c
 
 uint64 sys_dmesg(void) {
-  // test
-  for (int i = 0; i < BUFSIZE; ++i) {
-    write_byte((char)i);
-  }
-  printf("DEBUG: current buffer =\n");
-  for (int i = 0; i < BUFSIZE; ++i) {
-    printf("%d ", buffer.data[i]);
-  }
 
-  for (int i = 4; i < 9; ++i) {
-    write_byte(i);
-
-    printf("DEBUG: after write buffer =\n");
-    for (int j = 0; j < BUFSIZE; ++j) {
-      printf("%d ", buffer.data[j]);
-    }
-  }
   return 0;
 }
