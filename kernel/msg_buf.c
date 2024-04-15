@@ -8,7 +8,6 @@
 #include "defs.h"
 #include "msg_buf.h"
 
-// блокировать только на pr_message, на отдельные байты не надо
 struct msg_buf buffer;
 
 void msg_buf_init(void) {
@@ -18,21 +17,14 @@ void msg_buf_init(void) {
 }
 
 void write_byte(char byte) {
-//  printf("DEBUG(0): byte = %d, head = %d, tail = %d\n", byte, buffer.head, buffer.tail);
   if (buffer.tail == buffer.head) { // кольцо замкнулось
-//    printf("DEBUG(1):\t     buffer.tail == buffer.head\n");
-//    buffer.head++; // освобождаем место под новый символ
-//    buffer.head %= BUFSIZE;
-//    printf("DEBUG(2):\t     head = %d, tail = %d\n", buffer.head, buffer.tail);
     while (buffer.data[buffer.head] != 0 && buffer.data[buffer.head] != '\n') { // затираем первое сообщение
       buffer.data[buffer.head++] = 0;
       buffer.head %= BUFSIZE;
-//      printf("DEBUG(3):\t     head = %d, tail = %d\n", buffer.head, buffer.tail);
     }
   }
   buffer.data[buffer.tail++] = byte;
   buffer.tail %= BUFSIZE;
-//  printf("DEBUG(4):\t     head = %d, tail = %d\n", buffer.head, buffer.tail);
 }
 
 // >>> printf.c
@@ -139,8 +131,6 @@ uint64 sys_dmesg(void) {
   int copied = 0;
   argaddr(0, &buf);
 
-  printf("DEBUG(5): head = %d, tail = %d\n", buffer.head, buffer.tail);
-
   acquire(&buffer.lock);
 
   if (buffer.head == buffer.tail) { // буфер закольцевался, выдаём весь
@@ -150,7 +140,6 @@ uint64 sys_dmesg(void) {
     }
   } else {
     while (buffer.head != buffer.tail) {
-      printf("DEBUG(6): copied = %d, head = %d, tail = %d\n", copied, buffer.head, buffer.tail);
       if (copyout(myproc()->pagetable, buf + copied, &buffer.data[buffer.head], 1) < 0) {
         release(&buffer.lock);
         return -1;
@@ -160,18 +149,13 @@ uint64 sys_dmesg(void) {
       buffer.head %= BUFSIZE;
     }
   }
-  printf("DEBUG(7): итс окэй, copied = %d\n", copied);
-
 
   char zero = 0;
   if (copyout(myproc()->pagetable, buf + copied, &zero, 1) < 0) {
-    printf("Прощай, немытая Россия...\n");
     release(&buffer.lock);
     return -1;
   }
-  printf("DEBUG(8): итс окэй!\n", copied);
 
   release(&buffer.lock);
-  printf("DEBUG(9): итс окэй!!!\n", copied);
   return 0;
 }
