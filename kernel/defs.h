@@ -8,6 +8,11 @@ struct spinlock;
 struct sleeplock;
 struct stat;
 struct superblock;
+struct msg_buf;
+
+// msg_buf.c
+void            msg_buf_init(void);
+void            pr_mgs(const char* fmt, ...);
 
 // bio.c
 void            binit(void);
