@@ -37,18 +37,23 @@ void log_off(enum event event) {
 }
 
 void write_byte(char byte) {
-  if (logger.buffer.tail == logger.buffer.head) { // кольцо замкнулось
-    while (logger.buffer.data[logger.buffer.head] != 0 && logger.buffer.data[logger.buffer.head] != '\n') { // затираем первое сообщение
-      logger.buffer.data[logger.buffer.head++] = 0;
-      logger.buffer.head %= BUFSIZE;
+  int head = logger.buffer.head, tail = logger.buffer.tail;
+  char *data = logger.buffer.data;
+
+  if (tail == head) { // кольцо замкнулось
+    while (data[head] != 0 && data[head] != '\n') { // затираем первое сообщение
+      data[head++] = 0;
+      head %= BUFSIZE;
     }
-    if (logger.buffer.data[logger.buffer.head] == '\n') {
-      logger.buffer.data[logger.buffer.head++] = 0;
-      logger.buffer.head %= BUFSIZE;
+    if (data[head] == '\n') { // дотираем
+      data[head++] = 0;
+      head %= BUFSIZE;
     }
   }
-  logger.buffer.data[logger.buffer.tail++] = byte;
-  logger.buffer.tail %= BUFSIZE;
+  data[tail++] = byte;
+  tail %= BUFSIZE;
+
+  logger.buffer.head = head; logger.buffer.tail = tail;
 }
 
 // >>> printf.c
@@ -159,14 +164,14 @@ void log_event(enum event event, ...) {
     break;
   case Trap:
     type = va_arg(params, char*);
-    if (strncmp(type, "UART", 4) == 0) {
+    if (strncmp(type, "UART", strlen("UART")) == 0) {
       vlog_put("trap: device = UART, irq = %d", params);
 //      log_put("trap: device = %s, irq = %d, symbol = %c", params);
-    } else if (strncmp(type, "virtio", 6) == 0) {
+    } else if (strncmp(type, "virtio", strlen("virtio")) == 0) {
 //       printf("log_event: virtio trap\n");
       vlog_put("trap: device = virtio, irq = %d", params);
-    } else if (strncmp(type, "symbol", 5) == 0) {
-      vlog_put("trap: symbol = %s", params);
+    } else if (strncmp(type, "symbol", strlen("symbol")) == 0) {
+      vlog_put("trap: symbol = `%s`", params);
     } else {
       vlog_put("trap: char_code = %d", params);
     }
@@ -188,21 +193,23 @@ uint64 sys_dmesg(void) {
   argaddr(0, &buf);
 
   acquire(&logger.buffer.lock);
+  int head = logger.buffer.head, tail = logger.buffer.tail;
+  char *data = logger.buffer.data;
 
-  if (logger.buffer.head == logger.buffer.tail) { // буфер закольцевался, выдаём весь
-    if (copyout(myproc()->pagetable, buf, logger.buffer.data, BUFSIZE) < 0) {
+  if (head == tail) { // буфер закольцевался, выдаём весь
+    if (copyout(myproc()->pagetable, buf, data, BUFSIZE) < 0) {
       release(&logger.buffer.lock);
       return -1;
     }
   } else {
-    while (logger.buffer.head != logger.buffer.tail) {
-      if (copyout(myproc()->pagetable, buf + copied, &logger.buffer.data[logger.buffer.head], 1) < 0) {
+    while (head != tail) {
+      if (copyout(myproc()->pagetable, buf + copied, &data[head], 1) < 0) {
         release(&logger.buffer.lock);
         return -1;
       }
       copied++;
-      logger.buffer.head++;
-      logger.buffer.head %= BUFSIZE;
+      head++;
+      head %= BUFSIZE;
     }
   }
 
@@ -212,6 +219,7 @@ uint64 sys_dmesg(void) {
     return -1;
   }
 
+  logger.buffer.head = head; logger.buffer.tail = tail;
   release(&logger.buffer.lock);
   return 0;
 }
