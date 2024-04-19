@@ -26,6 +26,10 @@ int dmesg(char*);
 int log_on(int);
 int tlog_on(int, int);
 int log_off(int);
+int mutex_create(void);
+int mutex_lock(int);
+int mutex_unlock(int);
+int mutex_release(int);
 
 // ulib.c
 int stat(const char*, struct stat*);

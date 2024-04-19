@@ -28,6 +28,8 @@ main()
     logger_init();   // logger
     iinit();         // inode table
     fileinit();      // file table
+    mtable_init();   // mutex table
+    logger_init();   // logger
     virtio_disk_init(); // emulated hard disk
     userinit();      // first user process
     __sync_synchronize();
@@ -42,5 +44,5 @@ main()
     plicinithart();   // ask PLIC for device interrupts
   }
 
-  scheduler();        
+  scheduler();
 }

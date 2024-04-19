@@ -24,3 +24,7 @@
 #define SYS_log_on 23
 #define SYS_tlog_on 24
 #define SYS_log_off 25
+#define SYS_mutex_create 26
+#define SYS_mutex_lock 27
+#define SYS_mutex_unlock 28
+#define SYS_mutex_release 29

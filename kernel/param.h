@@ -12,3 +12,5 @@
 #define FSSIZE       2000  // size of file system in blocks
 #define MAXPATH      128   // maximum file path name
 #define MSGBUFPAGES  2   // number of pages in message buffer
+#define NMUTEX       16   // maximum number of mutexes
+#define NOMUTEX      16    // open mutex descriptors per process

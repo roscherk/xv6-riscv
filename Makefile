@@ -29,7 +29,8 @@ OBJS = \
   $K/kernelvec.o \
   $K/plic.o \
   $K/virtio_disk.o \
-  $K/logger.o
+  $K/logger.o \
+  $K/mutex.o \
 
 # riscv64-unknown-elf- or riscv64-linux-gnu-
 # perhaps in /opt/riscv/bin
@@ -135,6 +136,8 @@ UPROGS=\
 	$U/_zombie\
 	$U/_dmesg\
 	$U/_log\
+	$U/_test_chaos\
+	$U/_test_mutex\
 
 fs.img: mkfs/mkfs README $(UPROGS)
 	mkfs/mkfs fs.img README $(UPROGS)

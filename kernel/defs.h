@@ -15,6 +15,16 @@ enum event;
 // mylog.c
 void            logger_init(void);
 void            log_event(enum event, ...);
+struct mutex;
+
+// mutex.c
+void            mtable_init(void);
+int             mutex_create(void);
+int             mutex_lock(int);
+int             mutex_unlock(int);
+int             mutex_release(int);
+struct mutex*   mutex_dup(struct mutex*);
+void            mutex_close(struct mutex*);
 
 // bio.c
 void            binit(void);

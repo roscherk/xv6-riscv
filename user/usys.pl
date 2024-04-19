@@ -40,3 +40,7 @@ entry("dmesg");
 entry("log_on");
 entry("tlog_on");
 entry("log_off");
+entry("mutex_create");
+entry("mutex_lock");
+entry("mutex_unlock");
+entry("mutex_release");
