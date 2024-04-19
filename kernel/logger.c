@@ -12,7 +12,7 @@ struct logger logger;
 
 void logger_init(void) {
   for (int i = 0; i < EVENTSCOUNT; ++i) {
-    logger.status[i] = -1;
+    logger.status[i] = 0;
   }
   logger.buffer.head = logger.buffer.tail = 0;
   for (int i = 0; i < BUFSIZE; ++i) {
@@ -22,18 +22,34 @@ void logger_init(void) {
   initlock(&logger.buffer.lock, "msg_buf lock");
 }
 
-void log_on(enum event event, int tcks) {
-  logger.status[event] = tcks;
+void log_on(enum event event) {
+  logger.status[event] = -1;
 }
 
-void log_on_all(int tcks) {
+void tlog_on(enum event event, int tcks) {
+  logger.status[event] = ticks + tcks;
+}
+
+void log_on_all() {
   for (int i = 0; i < EVENTSCOUNT; ++i) {
-    logger.status[i] = tcks;
+    logger.status[i] = -1;
+  }
+}
+
+void tlog_on_all(int tcks) {
+  for (int i = 0; i < EVENTSCOUNT; ++i) {
+    logger.status[i] = ticks + tcks;
   }
 }
 
 void log_off(enum event event) {
   logger.status[event] = 0;
+}
+
+void log_off_all() {
+  for (int i = 0; i < EVENTSCOUNT; ++i) {
+    logger.status[i] = 0;
+  }
 }
 
 void write_byte(char byte) {
@@ -152,8 +168,12 @@ void vlog_put(const char *fmt, va_list ap) {
 // <<< printf.c
 
 void log_event(enum event event, ...) {
-  char* type;
+  if (logger.status[event] != -1
+      && ticks > logger.status[event]) {
+    return;
+  }
 
+  char* type;
   va_list params;
   va_start(params, event);
   // printf("log_event: event = %d\n", event);

@@ -14,10 +14,12 @@ enum event;
 
 // mylog.c
 void            logger_init(void);
-void            log_on(enum event, int);
-void            log_on_all(int);
+void            log_on(enum event);
+void            tlog_on(enum event, int);
+void            log_on_all();
+void            tlog_on_all(int);
 void            log_off(enum event);
-//void            log_put(const char*, ...);
+void            log_off_all();
 void            log_event(enum event, ...);
 
 // bio.c
