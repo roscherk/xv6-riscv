@@ -103,6 +103,9 @@ extern uint64 sys_link(void);
 extern uint64 sys_mkdir(void);
 extern uint64 sys_close(void);
 extern uint64 sys_dmesg(void);
+extern uint64 sys_log_on(void);
+extern uint64 sys_tlog_on(void);
+extern uint64 sys_log_off(void);
 
 // An array mapping syscall numbers from syscall.h
 // to the function that handles the system call.
@@ -129,7 +132,12 @@ static uint64 (*syscalls[])(void) = {
 [SYS_mkdir]   sys_mkdir,
 [SYS_close]   sys_close,
 [SYS_dmesg]   sys_dmesg,
+[SYS_log_on]  sys_log_on,
+[SYS_tlog_on] sys_tlog_on,
+[SYS_log_off] sys_log_off,
 };
+
+char* names[SYS_log_off] = {"fork", "exit", "wait", "pipe", "read", "kill", "exec", "fstat", "chdir", "dup", "getpid", "sbrk", "sleep", "uptime", "open", "write", "mknod", "unlink", "link", "mkdir", "close", "dmesg", "log_on", "tlog_on", "log_off"};
 
 void
 syscall(void)
@@ -143,7 +151,7 @@ syscall(void)
     // and store its return value in p->trapframe->a0
 
     acquire(&p->lock);
-    log_event(Syscall, p->pid, p->name, num);
+    log_event(Syscall, p->pid, p->name, names[num]);
     release(&p->lock);
 
     p->trapframe->a0 = syscalls[num]();

@@ -37,3 +37,6 @@ entry("sbrk");
 entry("sleep");
 entry("uptime");
 entry("dmesg");
+entry("log_on");
+entry("tlog_on");
+entry("log_off");

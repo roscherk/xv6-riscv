@@ -18,38 +18,7 @@ void logger_init(void) {
   for (int i = 0; i < BUFSIZE; ++i) {
     logger.buffer.data[i] = 0;
   }
-  logger.buffer.data[logger.buffer.head] = '\n';
   initlock(&logger.buffer.lock, "msg_buf lock");
-}
-
-void log_on(enum event event) {
-  logger.status[event] = -1;
-}
-
-void tlog_on(enum event event, int tcks) {
-  logger.status[event] = ticks + tcks;
-}
-
-void log_on_all() {
-  for (int i = 0; i < EVENTSCOUNT; ++i) {
-    logger.status[i] = -1;
-  }
-}
-
-void tlog_on_all(int tcks) {
-  for (int i = 0; i < EVENTSCOUNT; ++i) {
-    logger.status[i] = ticks + tcks;
-  }
-}
-
-void log_off(enum event event) {
-  logger.status[event] = 0;
-}
-
-void log_off_all() {
-  for (int i = 0; i < EVENTSCOUNT; ++i) {
-    logger.status[i] = 0;
-  }
 }
 
 void write_byte(char byte) {
@@ -180,7 +149,7 @@ void log_event(enum event event, ...) {
   switch (event) {
   case Syscall:
     // printf("log_event: Syscall\n");
-    vlog_put("syscall: caller_ID = %d, caller_name = %s, syscall_n = %d", params);
+    vlog_put("syscall: caller_ID = %d, caller_name = %s, syscall = %s", params);
     break;
   case Trap:
     type = va_arg(params, char*);
@@ -205,6 +174,45 @@ void log_event(enum event event, ...) {
     break;
   }
   va_end(params);
+}
+
+uint64 sys_log_on(void) {
+  int event;
+  argint(0, &event);
+  if (event < 0 || event >= EVENTSCOUNT) {
+    return -1;
+  }
+  logger.status[event] = -1;
+  return 0;
+}
+
+uint64 sys_tlog_on(void) {
+  printf("I AM ALIVE!!!");
+  int event, add;
+  argint(0, &event);
+  argint(1, &add);
+  printf("DEBUG: event = %d, add = %d\n", event, add);
+  if (event < 0 || event >= EVENTSCOUNT) {
+    return -1;
+  }
+  if (add < 0) {
+    return -2;
+  }
+  acquire(&tickslock);
+  logger.status[event] = ticks + add;
+  release(&tickslock);
+  printf("DEBUG: logger.status[event] = %d\n", logger.status[event]);
+  return 0;
+}
+
+uint64 sys_log_off(void) {
+  int event;
+  argint(0, &event);
+  if (event < 0 || event >= EVENTSCOUNT) {
+    return -1;
+  }
+  logger.status[event] = 0;
+  return 0;
 }
 
 uint64 sys_dmesg(void) {

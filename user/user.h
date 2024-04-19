@@ -23,6 +23,9 @@ char* sbrk(int);
 int sleep(int);
 int uptime(void);
 int dmesg(char*);
+int log_on(int);
+int tlog_on(int, int);
+int log_off(int);
 
 // ulib.c
 int stat(const char*, struct stat*);
