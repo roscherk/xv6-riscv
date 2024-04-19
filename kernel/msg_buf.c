@@ -12,13 +12,19 @@ struct msg_buf buffer;
 
 void msg_buf_init(void) {
   buffer.head = buffer.tail = 0;
-  buffer.data[buffer.head] = '\n';
+  for (int i = 0; i < BUFSIZE; ++i) {
+    buffer.data[i] = 0;
+  }
   initlock(&buffer.lock, "msg_buf lock");
 }
 
 void write_byte(char byte) {
   if (buffer.tail == buffer.head) { // кольцо замкнулось
     while (buffer.data[buffer.head] != 0 && buffer.data[buffer.head] != '\n') { // затираем первое сообщение
+      buffer.data[buffer.head++] = 0;
+      buffer.head %= BUFSIZE;
+    }
+    if (buffer.data[buffer.head] == '\n') { // дотираем
       buffer.data[buffer.head++] = 0;
       buffer.head %= BUFSIZE;
     }
