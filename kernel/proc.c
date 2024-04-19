@@ -461,6 +461,8 @@ scheduler(void)
         // before jumping back to us.
         p->state = RUNNING;
         c->proc = p;
+
+        log_event(Switch, p->pid, p->name, p->trapframe, &c->context);
         swtch(&c->context, &p->context);
 
         // Process is done running for now.

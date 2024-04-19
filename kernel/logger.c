@@ -86,10 +86,10 @@ static void printint(int xx, int base, int sign) {
 
 static void printptr(uint64 x) {
   int i;
-  consputc('0');
-  consputc('x');
+  write_byte('0');
+  write_byte('x');
   for (i = 0; i < (sizeof(uint64) * 2); i++, x <<= 4) {
-    consputc(digits[x >> (sizeof(uint64) * 8 - 4)]);
+    write_byte(digits[x >> (sizeof(uint64) * 8 - 4)]);
   }
 }
 
@@ -166,7 +166,6 @@ void log_event(enum event event, ...) {
     type = va_arg(params, char*);
     if (strncmp(type, "UART", strlen("UART")) == 0) {
       vlog_put("trap: device = UART, irq = %d", params);
-//      log_put("trap: device = %s, irq = %d, symbol = %c", params);
     } else if (strncmp(type, "virtio", strlen("virtio")) == 0) {
 //       printf("log_event: virtio trap\n");
       vlog_put("trap: device = virtio, irq = %d", params);
@@ -178,6 +177,7 @@ void log_event(enum event event, ...) {
     break;
   case Switch:
     // printf("log_event: Switch\n");
+    vlog_put("process: PID = %d, name = %s, trapframe = %p, context = %p", params);
     break;
   case Exec:
     // printf("log_event: Exec\n");
