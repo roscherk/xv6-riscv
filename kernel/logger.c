@@ -42,6 +42,10 @@ void write_byte(char byte) {
       logger.buffer.data[logger.buffer.head++] = 0;
       logger.buffer.head %= BUFSIZE;
     }
+    if (logger.buffer.data[logger.buffer.head] == '\n') {
+      logger.buffer.data[logger.buffer.head++] = 0;
+      logger.buffer.head %= BUFSIZE;
+    }
   }
   logger.buffer.data[logger.buffer.tail++] = byte;
   logger.buffer.tail %= BUFSIZE;
