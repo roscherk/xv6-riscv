@@ -9,6 +9,7 @@
 #include "spinlock.h"
 #include "proc.h"
 #include "defs.h"
+#include "logger.h"
 
 // the UART control registers are memory-mapped
 // at address UART0. this macro returns the
@@ -180,6 +181,11 @@ uartintr(void)
     int c = uartgetc();
     if(c == -1)
       break;
+    if (c >= ' ' && c <= '~') {
+      log_event(Trap, "symbol", (char*)&c);
+    } else {
+      log_event(Trap, "char_code", c);
+    }
     consoleintr(c);
   }
 

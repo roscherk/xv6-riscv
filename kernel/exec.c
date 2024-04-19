@@ -4,6 +4,7 @@
 #include "riscv.h"
 #include "spinlock.h"
 #include "proc.h"
+#include "logger.h"
 #include "defs.h"
 #include "elf.h"
 
@@ -32,7 +33,7 @@ exec(char *path, char **argv)
   struct proc *p = myproc();
 
   acquire(&p->lock);
-  pr_msg("PID = %d, name = %s", p->pid, p->name);
+  log_event(Exec, p->pid, p->name);
   release(&p->lock);
 
   begin_op();

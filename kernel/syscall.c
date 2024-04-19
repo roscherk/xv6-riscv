@@ -5,6 +5,7 @@
 #include "spinlock.h"
 #include "proc.h"
 #include "syscall.h"
+#include "logger.h"
 #include "defs.h"
 
 // Fetch the uint64 at addr from the current process.
@@ -140,6 +141,11 @@ syscall(void)
   if(num > 0 && num < NELEM(syscalls) && syscalls[num]) {
     // Use num to lookup the system call function for num, call it,
     // and store its return value in p->trapframe->a0
+
+    acquire(&p->lock);
+    log_event(Syscall, p->pid, p->name, num);
+    release(&p->lock);
+
     p->trapframe->a0 = syscalls[num]();
   } else {
     printf("%d %s: unknown sys call %d\n",

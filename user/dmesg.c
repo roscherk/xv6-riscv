@@ -2,7 +2,7 @@
 #include "kernel/param.h"
 #include "kernel/riscv.h"
 #include "kernel/spinlock.h"
-#include "kernel/msg_buf.h"
+#include "kernel/logger.h"
 #include "user.h"
 
 int main() {

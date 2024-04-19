@@ -9,10 +9,16 @@ struct sleeplock;
 struct stat;
 struct superblock;
 struct msg_buf;
+struct logger;
+enum event;
 
-// msg_buf.c
-void            msg_buf_init(void);
-void            pr_msg(const char* fmt, ...);
+// mylog.c
+void            logger_init(void);
+void            log_on(enum event, int);
+void            log_on_all(int);
+void            log_off(enum event);
+//void            log_put(const char*, ...);
+void            log_event(enum event, ...);
 
 // bio.c
 void            binit(void);
