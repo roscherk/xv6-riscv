@@ -145,14 +145,15 @@ uint64 sys_dmesg(void) {
       return -1;
     }
   } else {
-    while (buffer.head != buffer.tail) {
-      if (copyout(myproc()->pagetable, buf + copied, &buffer.data[buffer.head], 1) < 0) {
+    int head = buffer.head;
+    while (head != buffer.tail) {
+      if (copyout(myproc()->pagetable, buf + copied, &buffer.data[head], 1) < 0) {
         release(&buffer.lock);
         return -1;
       }
       copied++;
-      buffer.head++;
-      buffer.head %= BUFSIZE;
+      head++;
+      head %= BUFSIZE;
     }
   }
 
