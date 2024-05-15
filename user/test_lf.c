@@ -69,16 +69,9 @@ int main(int argc, char *argv[]) {
   for (uint i = 0; i < size; ++i) {
     buf[i % BUFSIZE] = current;
     current = next(current);
-    // printf("%d: %d ", i, current);
-//    printf("buffer:");
-//    for (uint j = 0; j < BUFSIZE; ++j) {
-//      printf(" %d", buf[j]);
-//    }
-//    printf("\n");
 
     if (i > 0 && i % BUFSIZE == BUFSIZE - 1) {
       status = write(fd, buf, BUFSIZE_B);
-      printf("status = %d\n", status);
       if (status != BUFSIZE_B) {
         fprintf(1, "Error: could not write to file\n");
         close(fd);
@@ -86,7 +79,6 @@ int main(int argc, char *argv[]) {
       }
     }
   }
-  printf("\n");
 
   close(fd);
 
@@ -111,8 +103,6 @@ int main(int argc, char *argv[]) {
     for (uint i = 0; i < BUFSIZE; ++i) {
       if (buf[i] == current) {
         good++;
-      } else {
-        printf("position %d: expected %d, got %d\n", i, current, buf[i]);
       }
       current = next(current);
     }
@@ -120,7 +110,7 @@ int main(int argc, char *argv[]) {
 
   close(fd);
 
-  printf("size = %d, processed = %d, good = %d\n", size, processed, good);
+  printf("bytes written: %d, processed: %d, good: %d\n", size, processed, good);
   if (processed == size && processed == good) {
     fprintf(1, "All good\n");
     exit(0);
