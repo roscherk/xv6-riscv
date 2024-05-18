@@ -516,6 +516,7 @@ uint64 sys_symlink(void) {
     end_op();
     return -1;
   }
+//  printf("DEBUG: target = `%s`, strlen(target) = %d", target, strlen(target));
   if (writei(inode, 0, (uint64)target, 0, strlen(target)) < strlen(target)) {
     return -2;
   }
@@ -525,19 +526,24 @@ uint64 sys_symlink(void) {
 }
 
 uint64 sys_readlink(void) {
-  char filename[MAXPATH], buf[MAXPATH];
-  if (argstr(0, filename, MAXPATH) < 0 || argstr(1, buf, MAXPATH) < 0) {
+  char filename[MAXPATH];
+  uint64 buf;
+  if (argstr(0, filename, MAXPATH) < 0) {
     return -1;
   }
+  argaddr(1, &buf);
+//  printf("DEBUG: got filename = `%s`, buf = `%p`\n", filename, buf);
 
   struct inode* inode = namei(filename);
   if (inode == 0) {
     return -1;
   }
+
   ilock(inode);
-  if (readi(inode, 1, (uint64)buf, 0, inode->size) != inode->size) {
+  int read = readi(inode, 1, buf, 0, inode->size);
+  if (read != inode->size) {
     return -2;
   }
-  iunlock(inode);
+  iunlockput(inode);
   return 0;
 }

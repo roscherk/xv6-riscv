@@ -1,7 +1,8 @@
 #include "kernel/types.h"
+#include "kernel/fs.h"
+#include "kernel/param.h"
 #include "kernel/stat.h"
 #include "user/user.h"
-#include "kernel/fs.h"
 
 char*
 fmtname(char *path)
@@ -29,6 +30,7 @@ ls(char *path)
   int fd;
   struct dirent de;
   struct stat st;
+  char target[MAXPATH];
 
   if((fd = open(path, 0)) < 0){
     fprintf(2, "ls: cannot open %s\n", path);
@@ -45,6 +47,14 @@ ls(char *path)
   case T_DEVICE:
   case T_FILE:
     printf("%s %d %d %l\n", fmtname(path), st.type, st.ino, st.size);
+    break;
+
+  case T_SYMLINK:
+    if (readlink(path, target) < 0) {
+      printf("%s dead link\n", fmtname(path));
+    } else {
+      printf("%s -> %s\n", fmtname(path), target);
+    }
     break;
 
   case T_DIR:
