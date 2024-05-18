@@ -16,22 +16,6 @@
 #include "file.h"
 #include "fcntl.h"
 
-uint64 sys_symlink(void) {
-  char *target = 0, *filename = 0;
-  if (argstr(0, target, MAXPATH) < 0 || argstr(1, filename, MAXPATH) < 0) {
-    return -1;
-  }
-  return symlink(target, filename);
-}
-
-uint64 sys_readlink(void) {
-  char *filename = 0, *buf = 0;
-  if (argstr(0, filename, MAXPATH) < 0 || argstr(1, buf, MAXPATH) < 0) {
-    return -1;
-  }
-  return readlink(filename, buf);
-}
-
 // Fetch the nth word-sized system call argument as a file descriptor
 // and return both the descriptor and the corresponding struct file.
 static int
@@ -517,5 +501,43 @@ sys_pipe(void)
     fileclose(wf);
     return -1;
   }
+  return 0;
+}
+
+uint64 sys_symlink(void) {
+  char target[MAXPATH], filename[MAXPATH];
+  if (argstr(0, target, MAXPATH) < 0 || argstr(1, filename, MAXPATH) < 0) {
+    return -1;
+  }
+  struct inode* inode;
+  begin_op();
+  if ((inode = create(filename, T_SYMLINK, 0, 0)) == 0) {
+    end_op();
+    return -1;
+  }
+  ilock(inode);
+  if (writei(inode, 0, (uint64)target, 0, strlen(target)) < strlen(target)) {
+    return -2;
+  }
+
+  iunlock(inode);
+  end_op();
+  return 0;
+}
+
+uint64 sys_readlink(void) {
+  char filename[MAXPATH], buf[MAXPATH];
+  if (argstr(0, filename, MAXPATH) < 0 || argstr(1, buf, MAXPATH) < 0) {
+    return -1;
+  }
+  struct inode* inode = namei(filename);
+  if (inode == 0) {
+    return -1;
+  }
+  ilock(inode);
+  if (readi(inode, 1, (uint64)buf, 0, inode->size) != inode->size) {
+    return -2;
+  }
+  iunlock(inode);
   return 0;
 }
