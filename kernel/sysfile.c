@@ -16,6 +16,22 @@
 #include "file.h"
 #include "fcntl.h"
 
+uint64 sys_symlink(void) {
+  char *target = 0, *filename = 0;
+  if (argstr(0, target, MAXPATH) < 0 || argstr(1, filename, MAXPATH) < 0) {
+    return -1;
+  }
+  return symlink(target, filename);
+}
+
+uint64 sys_readlink(void) {
+  char *filename = 0, *buf = 0;
+  if (argstr(0, filename, MAXPATH) < 0 || argstr(1, buf, MAXPATH) < 0) {
+    return -1;
+  }
+  return readlink(filename, buf);
+}
+
 // Fetch the nth word-sized system call argument as a file descriptor
 // and return both the descriptor and the corresponding struct file.
 static int

@@ -9,6 +9,10 @@ struct sleeplock;
 struct stat;
 struct superblock;
 
+// symlink.c
+int symlink(const char *target, const char *filename);
+int readlink(const char *filename, char *buf);
+
 // bio.c
 void            binit(void);
 struct buf*     bread(uint, uint);
