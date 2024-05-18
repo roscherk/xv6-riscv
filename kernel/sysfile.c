@@ -506,20 +506,19 @@ sys_pipe(void)
 
 uint64 sys_symlink(void) {
   char target[MAXPATH], filename[MAXPATH];
+  struct inode* inode;
+
   if (argstr(0, target, MAXPATH) < 0 || argstr(1, filename, MAXPATH) < 0) {
     return -1;
   }
-  struct inode* inode;
   begin_op();
   if ((inode = create(filename, T_SYMLINK, 0, 0)) == 0) {
     end_op();
     return -1;
   }
-  ilock(inode);
   if (writei(inode, 0, (uint64)target, 0, strlen(target)) < strlen(target)) {
     return -2;
   }
-
   iunlock(inode);
   end_op();
   return 0;
@@ -530,6 +529,7 @@ uint64 sys_readlink(void) {
   if (argstr(0, filename, MAXPATH) < 0 || argstr(1, buf, MAXPATH) < 0) {
     return -1;
   }
+
   struct inode* inode = namei(filename);
   if (inode == 0) {
     return -1;
