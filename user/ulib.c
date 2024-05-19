@@ -95,6 +95,20 @@ stat(const char *n, struct stat *st)
   return r;
 }
 
+
+int lstat(const char *n, struct stat *st)
+{
+  int fd;
+  int r;
+
+  fd = open(n, O_RDONLY | O_NOFOLLOW);
+  if(fd < 0)
+    return -1;
+  r = fstat(fd, st);
+  close(fd);
+  return r;
+}
+
 int
 atoi(const char *s)
 {

@@ -328,7 +328,43 @@ sys_open(void)
       return -1;
     }
     ilock(ip);
-    if(ip->type == T_DIR && omode != O_RDONLY){
+    if (!(omode & O_NOFOLLOW)) {
+      int jumps = 0;
+      char target[MAXPATH], orig_path[MAXPATH];
+      safestrcpy(orig_path, path, MAXPATH);
+
+      while (ip->type == T_SYMLINK) {
+        printf("DEBUG: jump %d, path = `%s`\n", jumps, path);
+        if (jumps > RECDEPTH) {
+          iunlock(ip);
+          end_op();
+          return -2;
+        }
+        memset(target, 0, MAXPATH);
+        iunlock(ip);
+        if (readlink(path, target) < 0) {
+          end_op();
+          return -3;
+        }
+        jumps++;
+        safestrcpy(path, target, MAXPATH);
+        printf("DEBUG: new path = `%s`\n", path);
+        if (*path == '.') {
+          char name[MAXPATH];
+          if((ip = nameiparent(path, name)) == 0){
+            end_op();
+            return -4;
+          }
+          printf("DEBUG: name = `%s`\n", name);
+        } else if((ip = namei(path)) == 0){
+          end_op();
+          return -4;
+        }
+
+        ilock(ip);
+      }
+    }
+    if(ip->type == T_DIR && omode != O_RDONLY && omode != O_NOFOLLOW){
       iunlockput(ip);
       end_op();
       return -1;
@@ -533,17 +569,24 @@ uint64 sys_readlink(void) {
   }
   argaddr(1, &buf);
 //  printf("DEBUG: got filename = `%s`, buf = `%p`\n", filename, buf);
+  return readlink(filename, (char*)buf);
+}
 
-  struct inode* inode = namei(filename);
+int readlink(const char* filename, char* buf) {
+//  printf("DEBUG: got filename = `%s`, buf = `%p`\n", filename, buf);
+  struct inode* inode = namei((char*)filename);
   if (inode == 0) {
     return -1;
   }
+//  printf("DEBUG: inode->inum = %d\n", inode->inum);
 
   ilock(inode);
-  int read = readi(inode, 1, buf, 0, inode->size);
+  int read = readi(inode, 1, (uint64)buf, 0, inode->size);
+//  printf("DEBUG: read = %d\n", read);
   if (read != inode->size) {
     return -2;
   }
   iunlockput(inode);
-  return 0;
+  return read;
 }
+
