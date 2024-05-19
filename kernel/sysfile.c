@@ -568,12 +568,12 @@ uint64 sys_readlink(void) {
     return -1;
   }
   argaddr(1, &buf);
-//  printf("DEBUG: got filename = `%s`, buf = `%p`\n", filename, buf);
+//  printf("DEBUG: got name_buf = `%s`, data_buf = `%p`\n", name_buf, data_buf);
   return readlink(filename, (char*)buf);
 }
 
 int readlink(const char* filename, char* buf) {
-//  printf("DEBUG: got filename = `%s`, buf = `%p`\n", filename, buf);
+//  printf("DEBUG: got name_buf = `%s`, data_buf = `%p`\n", name_buf, data_buf);
   struct inode* inode = namei((char*)filename);
   if (inode == 0) {
     return -1;

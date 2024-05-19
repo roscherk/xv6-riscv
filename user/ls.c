@@ -23,13 +23,13 @@ fmtname(char *path)
   return buf;
 }
 
-void print_symlink(char* path) {
+void print_symlink(char* path, struct stat* st) {
 //  printf("printing symlink `%s`\n", path);
   char target[MAXPATH];
   if (readlink(path, target) < 0) {
-    printf("%s dead link\n", fmtname(path));
+    printf("%s %d %d %d -> dead link\n", fmtname(path), st->type, st->ino, st->size);
   } else {
-    printf("%s -> %s\n", fmtname(path), target);
+    printf("%s %d %d %d -> %s\n", fmtname(path), st->type, st->ino, st->size, target);
   }
 }
 
@@ -59,7 +59,7 @@ ls(char *path)
     break;
 
   case T_SYMLINK:
-    print_symlink(path);
+    print_symlink(path, &st);
     break;
 
   case T_DIR:
@@ -75,13 +75,13 @@ ls(char *path)
         continue;
       memmove(p, de.name, DIRSIZ);
       p[DIRSIZ] = 0;
-//      printf("DEBUG: p = `%s`\n", p);
+//      printf("DEBUG: path = `%s`, data_buf = `%s`, p = `%s`\n", path, data_buf, p);
       if(lstat(buf, &st) < 0){
         printf("ls: cannot stat %s\n", buf);
         continue;
       }
       if (st.type == T_SYMLINK) {
-        print_symlink(p);
+        print_symlink(buf, &st);
       } else {
         printf("%s %d %d %d\n", fmtname(buf), st.type, st.ino, st.size);
       }

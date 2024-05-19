@@ -4,7 +4,7 @@
 #include "kernel/stat.h"
 #include "user/user.h"
 
-char buf[1024];
+char data_buf[1024];
 int match(char*, char*);
 
 void
@@ -14,10 +14,10 @@ grep(char *pattern, int fd)
   char *p, *q;
 
   m = 0;
-  while((n = read(fd, buf+m, sizeof(buf)-m-1)) > 0){
+  while((n = read(fd, data_buf +m, sizeof(data_buf)-m-1)) > 0){
     m += n;
-    buf[m] = '\0';
-    p = buf;
+    data_buf[m] = '\0';
+    p = data_buf;
     while((q = strchr(p, '\n')) != 0){
       *q = 0;
       if(match(pattern, p)){
@@ -27,8 +27,8 @@ grep(char *pattern, int fd)
       p = q+1;
     }
     if(m > 0){
-      m -= p - buf;
-      memmove(buf, p, m);
+      m -= p - data_buf;
+      memmove(data_buf, p, m);
     }
   }
 }

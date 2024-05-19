@@ -2,15 +2,15 @@
 #include "kernel/stat.h"
 #include "user/user.h"
 
-char buf[512];
+char data_buf[512];
 
 void
 cat(int fd)
 {
   int n;
 
-  while((n = read(fd, buf, sizeof(buf))) > 0) {
-    if (write(1, buf, n) != n) {
+  while((n = read(fd, data_buf, sizeof(data_buf))) > 0) {
+    if (write(1, data_buf, n) != n) {
       fprintf(2, "cat: write error\n");
       exit(1);
     }
