@@ -30,7 +30,7 @@ void read_data(const char *filename, char *buf) {
   check(fd, 0, "Could not open file");
   check(read(fd, buf, DATA_SIZE), DATA_SIZE, "Could not read");
   buf[DATA_SIZE - 1] = 0;
-  printf("read_data: buf = `%s`\n", buf);
+//  printf("read_data: buf = `%s`\n", buf);
 }
 
 void arrange(const char* dir) {
@@ -43,7 +43,7 @@ int test1() {
   int pass = -1;
   arrange("/");
 
-  symlink("f0", "l0_abs");
+  symlink("/f0", "l0_abs");
   pass += check(readlink("l0_abs", name_buf), -1, "Readlink error");
 
   read_data("l0_abs", data_buf);
@@ -93,9 +93,9 @@ int test4() {
 
 int test5() {
   int pass = -1;
-  arrange("/");
+  arrange("/d1");
 
-  symlink("l0_abs", "l0_abs2abs");
+  symlink("/l0_abs", "l0_abs2abs");
   pass += check(readlink("l0_abs2abs", name_buf), -1, "Readlink error");
 
   read_data("l0_abs2abs", data_buf);
@@ -108,7 +108,7 @@ int test6() {
   int pass = -1;
   arrange("/");
 
-  symlink("l0_rel", "l0_abs2rel");
+  symlink("/l0_rel", "l0_abs2rel");
   pass += check(readlink("l0_abs2rel", name_buf), -1, "Readlink error");
 
   read_data("l0_abs2rel", data_buf);
@@ -119,6 +119,14 @@ int test6() {
 
 int test7() {
   int pass = -1;
+  arrange("/d1");
+
+  symlink("../l0_rel", "l0_rel2rel");
+  pass += check(readlink("l0_rel2rel", name_buf), -1, "Readlink error");
+
+  read_data("l0_rel2rel", data_buf);
+  pass += check(strcmp(data_buf, data), 0, "Contents do not match");
+
   return pass;
 }
 
@@ -193,7 +201,7 @@ static char* test_names[TESTS_COUNT] = {
 //};
 
 void run_test(uint index) {
-  printf("Running test `%s`... ", test_names[index]);
+  printf("--- Running test %d `%s`... ", index + 1, test_names[index]);
   if (check(tests[index](), 0, "Fail") >= 0) {
     printf("Success!\n");
   }

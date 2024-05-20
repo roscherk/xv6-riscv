@@ -26,6 +26,7 @@ fmtname(char *path)
 void print_symlink(char* path, struct stat* st) {
 //  printf("printing symlink `%s`\n", path);
   char target[MAXPATH];
+  memset(target, 0, MAXPATH);
   if (readlink(path, target) < 0) {
     printf("%s %d %d %d -> dead link\n", fmtname(path), st->type, st->ino, st->size);
   } else {

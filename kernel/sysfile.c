@@ -330,12 +330,11 @@ sys_open(void)
     ilock(ip);
     if (!(omode & O_NOFOLLOW)) {
       int jumps = 0;
-      char target[MAXPATH], orig_path[MAXPATH];
-      safestrcpy(orig_path, path, MAXPATH);
+      char target[MAXPATH];
 
       while (ip->type == T_SYMLINK) {
-        printf("open: jump %d, orig_path = `%s`, path = `%s`\n", jumps, orig_path, path);
-        if (jumps > RECDEPTH) {
+//        printf("open: jump %d, path = `%s`\n", jumps, path);
+        if (jumps == RECDEPTH) {
           iunlock(ip);
           end_op();
           return -2;
@@ -347,22 +346,38 @@ sys_open(void)
           return -3;
         }
         jumps++;
-        safestrcpy(path, target, MAXPATH);
-        printf("open: new path = `%s`\n", path);
-        if (*path == '.') {
+//        printf("open: new path = `%s`\n", target);
+        if (*path != '/') {
           char name[MAXPATH];
-          if(nameiparent(path, name) == 0){
+          if(nameiparent(target, name) == 0){
             end_op();
             return -4;
           }
-          printf("open: path = `%s`, name = `%s`\n", path, name);
+//          printf("open: path = `%s`, target = `%s`, name = `%s`,\n\tstrlen(path) = %d, strlen(target) = %d, strlen(name) = %d, s = `%s`\n", path, target, name, strlen(path), strlen(target), strlen(name), path + strlen(path) - strlen(name));
+          int last_slash = strlen(path) - 1;
+          while (path[last_slash] != '/' && last_slash > 0) {
+//            printf("%s, ", &path[last_slash]);
+            last_slash--;
+          }
+//          printf("last_slash = %d\n", last_slash);
+          if (last_slash != 0) {
+            memset(path + last_slash + 1, 0, strlen(path) - last_slash);
+            memmove(path + last_slash + 1, target, strlen(target));
+          } else {
+            safestrcpy(path, target, MAXPATH);
+          }
+        } else {
+          safestrcpy(path, target, MAXPATH);
         }
+
         if((ip = namei(path)) == 0){
+          printf("open: can't find %s\n", path);
           end_op();
           return -4;
         }
 
         ilock(ip);
+//        printf("open: read %s, type = %d\n", path, ip->type);
       }
     }
     if(ip->type == T_DIR && omode != O_RDONLY && omode != O_NOFOLLOW){
@@ -553,7 +568,7 @@ uint64 sys_symlink(void) {
     end_op();
     return -1;
   }
-  printf("symlink: target = `%s`, strlen(target) = %d\n", target, strlen(target));
+//  printf("symlink: target = `%s`, strlen(target) = %d\n", target, strlen(target));
   if (writei(inode, 0, (uint64)target, 0, strlen(target)) < strlen(target)) {
     return -2;
   }
