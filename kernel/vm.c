@@ -5,6 +5,8 @@
 #include "riscv.h"
 #include "defs.h"
 #include "fs.h"
+#include "spinlock.h"
+#include "proc.h"
 
 /*
  * the kernel's page table.
@@ -14,6 +16,40 @@ pagetable_t kernel_pagetable;
 extern char etext[];  // kernel.ld sets this to end of kernel code.
 
 extern char trampoline[]; // trampoline.S
+
+void vmprint(const pagetable_t pagetable, int depth) {
+  if (depth == 0)
+    printf("page table %p\n", &pagetable);
+  for (int i = 0; i < 512; i++) {
+    pte_t pte = pagetable[i];
+    if (pte & PTE_V) {
+      uint64 child = PTE2PA(pte);
+      for (int j = 0; j <= depth; ++j, printf(" .."));
+      printf("%d: pte %p pa %p fl ", i, pte, PTE2PA(pte));
+
+      if (pte & PTE_V)
+        printf("v");
+      if (pte & PTE_R)
+        printf("r");
+      if (pte & PTE_W)
+        printf("w");
+      if (pte & PTE_X)
+        printf("x");
+      if (pte & PTE_U)
+        printf("u");
+      printf("\n");
+
+      if ((pte & (PTE_R | PTE_W | PTE_X)) == 0) {
+        vmprint((pagetable_t)child, depth + 1);
+      }
+    }
+  }
+}
+
+uint64 sys_vmprint(void) {
+  vmprint(myproc()->pagetable, 0);
+  return 0;
+}
 
 // Make a direct-map page table for the kernel.
 pagetable_t

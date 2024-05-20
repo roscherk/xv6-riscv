@@ -6,6 +6,22 @@
 #include "spinlock.h"
 #include "proc.h"
 
+uint64 sys_pgaccess(void) {
+  uint64 pointer, buf;
+  int size;
+  argaddr(0, &pointer);
+  argint(1, &size);
+  argaddr(2, &buf);
+
+//  pagetable_t pagetable = myproc()->pagetable;
+
+//  int accessed = 0;
+  for (int i = 0; i < (size + PGSIZE - 1) / PGSIZE; ++i) {
+
+  }
+  return 0;
+}
+
 uint64
 sys_exit(void)
 {

@@ -9,6 +9,8 @@ struct sleeplock;
 struct stat;
 struct superblock;
 
+void vmprint(pagetable_t, int);
+
 // bio.c
 void            binit(void);
 struct buf*     bread(uint, uint);
