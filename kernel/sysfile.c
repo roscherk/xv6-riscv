@@ -371,9 +371,9 @@ sys_open(void)
         }
 
         if((ip = namei(path)) == 0){
-          printf("open: can't find %s\n", path);
+//          printf("open: can't find %s\n", path);
           end_op();
-          return -4;
+          return -5;
         }
 
         ilock(ip);

@@ -4,7 +4,7 @@
 #include "kernel/stat.h"
 #include "user/user.h"
 
-#define TESTS_COUNT 12
+#define TESTS_COUNT 13
 #define DATA_SIZE 13
 
 char name_buf[MAXPATH], data_buf[DATA_SIZE];
@@ -25,10 +25,10 @@ void makefile(char *filename) {
   close(fd);
 }
 
-void read_data(const char *filename, int fail) {
+void read_data(const char *filename, int expected) {
   int fd = open(filename, O_RDONLY);
-  check(fd, -fail, "Could not open file");
-  check(read(fd, data_buf, DATA_SIZE), -fail, "Could not read");
+  check(fd, expected, "Could not open file");
+  check(read(fd, data_buf, DATA_SIZE), expected, "Could not read");
   data_buf[DATA_SIZE - 1] = 0;
   //  printf("read_data: buf = `%s`\n", data_buf);
 }
@@ -103,27 +103,50 @@ void test8() {
   arrange("/");
 
   symlink("l_inf_rec", "l_inf_rec");
-  return read_data("lrec", 1);
+  return read_data("l_inf_rec", -1);
 }
 
 void test9() {
   arrange("/");
 
-  symlink("lrec0", "lrec1");
-  symlink("lrec1", "lrec2");
-  symlink("lrec2", "lrec0");
-  return read_data("lrec0", 1);
+  symlink("l0_rec", "l1_rec");
+  symlink("l1_rec", "l2_rec");
+  symlink("l2_rec", "l0_rec");
+  return read_data("l0_rec", -1);
 }
 
-void test10() {}
+void test10() {
+    arrange("/");
 
-void test11() {}
+    symlink("no_file", "l_nofile_abs");
+    return read_data("l_nofile_abs", -1);
+}
 
-void test12() {}
+void test11() {
+  arrange("/");
+
+  symlink("./f3", "l_wrong_rel");
+  return read_data("l_wrong_rel", -1);
+}
+
+void test12() {
+  arrange("/d1/d2/d3");
+
+  symlink("../../../f3", "l_wrong_rel_up");
+  return read_data("l_wrong_rel_up", -1);
+}
+
+void test13() {
+  arrange("/");
+
+  symlink("./d1/d2/d3/f0", "l_wrong_rel_down");
+  return read_data("l_wrong_rel_down", -1);
+}
 
 static void (*tests[TESTS_COUNT])(void) = {
     test1, test2, test3, test4,  test5,  test6,
     test7, test8, test9, test10, test11, test12,
+    test13
 };
 
 static char *test_names[TESTS_COUNT] = {
@@ -137,6 +160,7 @@ static char *test_names[TESTS_COUNT] = {
     "endless rec",
     "endless rec relative",
     "absolute to nonexistent",
+    "relative to wrong path",
     "relative to wrong path up",
     "relative to wrong path down",
 };
