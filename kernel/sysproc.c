@@ -13,11 +13,18 @@ uint64 sys_pgaccess(void) {
   argint(1, &size);
   argaddr(2, &buf);
 
-//  pagetable_t pagetable = myproc()->pagetable;
+  pagetable_t pagetable = myproc()->pagetable;
 
-//  int accessed = 0;
-  for (int i = 0; i < (size + PGSIZE - 1) / PGSIZE; ++i) {
-
+  int accessed = 0;
+  for (int i = 0; i < (size + PGSIZE - 1) / PGSIZE; ++i, pointer += PGSIZE) {
+    pte_t *pte = walk(pagetable, pointer, 0);
+    if (*pte & PTE_A) {
+      accessed = 1;
+      *pte &= ~PTE_A;
+    }
+  }
+  if (copyout(pagetable, buf, (char *)&accessed, sizeof(accessed)) < 0) {
+    return -1;
   }
   return 0;
 }

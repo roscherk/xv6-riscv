@@ -133,7 +133,7 @@ UPROGS=\
 	$U/_wc\
 	$U/_zombie\
 	$U/_vmprint\
-	$U/_pgaccess\
+	$U/_test_pgaccess\
 
 fs.img: mkfs/mkfs README $(UPROGS)
 	mkfs/mkfs fs.img README $(UPROGS)
