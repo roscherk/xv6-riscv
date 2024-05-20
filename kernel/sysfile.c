@@ -334,7 +334,7 @@ sys_open(void)
       safestrcpy(orig_path, path, MAXPATH);
 
       while (ip->type == T_SYMLINK) {
-        printf("DEBUG: jump %d, path = `%s`\n", jumps, path);
+        printf("open: jump %d, orig_path = `%s`, path = `%s`\n", jumps, orig_path, path);
         if (jumps > RECDEPTH) {
           iunlock(ip);
           end_op();
@@ -342,21 +342,22 @@ sys_open(void)
         }
         memset(target, 0, MAXPATH);
         iunlock(ip);
-        if (readlink(path, target) < 0) {
+        if (readlink(path, target, 0) < 0) {
           end_op();
           return -3;
         }
         jumps++;
         safestrcpy(path, target, MAXPATH);
-        printf("DEBUG: new path = `%s`\n", path);
+        printf("open: new path = `%s`\n", path);
         if (*path == '.') {
           char name[MAXPATH];
-          if((ip = nameiparent(path, name)) == 0){
+          if(nameiparent(path, name) == 0){
             end_op();
             return -4;
           }
-          printf("DEBUG: name = `%s`\n", name);
-        } else if((ip = namei(path)) == 0){
+          printf("open: path = `%s`, name = `%s`\n", path, name);
+        }
+        if((ip = namei(path)) == 0){
           end_op();
           return -4;
         }
@@ -552,7 +553,7 @@ uint64 sys_symlink(void) {
     end_op();
     return -1;
   }
-//  printf("DEBUG: target = `%s`, strlen(target) = %d", target, strlen(target));
+  printf("symlink: target = `%s`, strlen(target) = %d\n", target, strlen(target));
   if (writei(inode, 0, (uint64)target, 0, strlen(target)) < strlen(target)) {
     return -2;
   }
@@ -568,25 +569,23 @@ uint64 sys_readlink(void) {
     return -1;
   }
   argaddr(1, &buf);
-//  printf("DEBUG: got name_buf = `%s`, data_buf = `%p`\n", name_buf, data_buf);
-  return readlink(filename, (char*)buf);
+  return readlink(filename, (char*)buf, 1);
 }
 
-int readlink(const char* filename, char* buf) {
-//  printf("DEBUG: got name_buf = `%s`, data_buf = `%p`\n", name_buf, data_buf);
+int readlink(const char* filename, char* buf, int user) {
   struct inode* inode = namei((char*)filename);
   if (inode == 0) {
     return -1;
   }
-//  printf("DEBUG: inode->inum = %d\n", inode->inum);
 
   ilock(inode);
-  int read = readi(inode, 1, (uint64)buf, 0, inode->size);
-//  printf("DEBUG: read = %d\n", read);
+//  printf("readlink: inode->inum = %d, inode->size = %d\n", inode->inum, inode->size);
+  int read = readi(inode, user, (uint64)buf, 0, inode->size);
+//  printf("readlink: read = %d\n", read);
   if (read != inode->size) {
     return -2;
   }
-  iunlockput(inode);
+  iunlock(inode);
   return read;
 }
 

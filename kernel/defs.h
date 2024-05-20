@@ -10,7 +10,7 @@ struct stat;
 struct superblock;
 
 int symlink(const char *target, const char *filename);
-int readlink(const char *filename, char *buf);
+int readlink(const char *filename, char *buf, int user);
 
 // bio.c
 void            binit(void);
