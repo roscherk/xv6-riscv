@@ -7,11 +7,10 @@
 #include "proc.h"
 
 uint64 sys_pgaccess(void) {
-  uint64 pointer, buf;
+  uint64 pointer;
   int size;
   argaddr(0, &pointer);
   argint(1, &size);
-  argaddr(2, &buf);
 
   pagetable_t pagetable = myproc()->pagetable;
 
@@ -23,10 +22,7 @@ uint64 sys_pgaccess(void) {
       *pte &= ~PTE_A;
     }
   }
-  if (copyout(pagetable, buf, (char *)&accessed, sizeof(accessed)) < 0) {
-    return -1;
-  }
-  return 0;
+  return accessed;
 }
 
 uint64

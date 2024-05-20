@@ -37,6 +37,8 @@ void vmprint(const pagetable_t pagetable, int depth) {
         printf("x");
       if (pte & PTE_U)
         printf("u");
+      if (pte & PTE_A)
+        printf("a");
       printf("\n");
 
       if ((pte & (PTE_R | PTE_W | PTE_X)) == 0) {

@@ -3,21 +3,22 @@
 // #include "kernel/stat.h"
 #include "user/user.h"
 
-#define ARRSIZE (7 * (PGSIZE / 8))
+#define ELEMENTS (7 * (PGSIZE / sizeof(int)))
+#define ARRSIZE (ELEMENTS * sizeof(int))
 
-int stack_arr[ARRSIZE];
+int stack_arr[ELEMENTS];
 
 void check(int* array, int size, int expected) {
-  int accessed = 0;
-  if (expected != 0) {
-    array[0] = 42;
-  }
+  int accessed;
   printf("Test access %d: ", expected);
-  if (pgaccess(array, size, &accessed) != 0) {
+  if (pgaccess(array, size) != 0) {
     fprintf(2, "pgaccess non-zero exit code\n");
     exit(1);
   }
-  if (accessed != expected) {
+  if (expected != 0) {
+    array[0] = 42;
+  }
+  if ((accessed = pgaccess(array, size)) != expected) {
     fprintf(2, "expected accessed = %d, got %d\n", expected, accessed);
     exit(2);
   }
@@ -28,10 +29,12 @@ int main() {
   int *heap_arr = malloc(ARRSIZE);
   
   printf("Running stack test...\n");
+  pgaccess(stack_arr, ARRSIZE); // reset
   check(stack_arr, ARRSIZE, 0);
   check(stack_arr, ARRSIZE, 1);
 
   printf("Running heap test...\n");
+  pgaccess(heap_arr, ARRSIZE); // reset
   check(heap_arr, ARRSIZE, 0);
   check(heap_arr, ARRSIZE, 1);
 
