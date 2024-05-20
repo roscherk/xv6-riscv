@@ -131,15 +131,15 @@ void test11() {
 void test12() {
   arrange("/d1/d2/d3");
 
-  symlink("../../../f3", "l_wrong_rel_up");
-  return read_data("l_wrong_rel_up", -1);
+  symlink("../../../f3", "l_wrel_up");
+  return read_data("l_wrel_up", -1);
 }
 
 void test13() {
   arrange("/");
 
-  symlink("./d1/d2/d3/f0", "l_wrong_rel_down");
-  return read_data("l_wrong_rel_down", -1);
+  symlink("./d1/d2/d3/f0", "l_wrel_down");
+  return read_data("l_wrel_down", -1);
 }
 
 static void (*tests[TESTS_COUNT])(void) = {
