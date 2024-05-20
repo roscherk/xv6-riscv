@@ -333,7 +333,6 @@ sys_open(void)
       char target[MAXPATH];
 
       while (ip->type == T_SYMLINK) {
-//        printf("open: jump %d, path = `%s`\n", jumps, path);
         if (jumps == RECDEPTH) {
           iunlock(ip);
           end_op();
@@ -346,20 +345,16 @@ sys_open(void)
           return -3;
         }
         jumps++;
-//        printf("open: new path = `%s`\n", target);
         if (*path != '/') {
           char name[MAXPATH];
           if(nameiparent(target, name) == 0){
             end_op();
             return -4;
           }
-//          printf("open: path = `%s`, target = `%s`, name = `%s`,\n\tstrlen(path) = %d, strlen(target) = %d, strlen(name) = %d, s = `%s`\n", path, target, name, strlen(path), strlen(target), strlen(name), path + strlen(path) - strlen(name));
           int last_slash = strlen(path) - 1;
           while (path[last_slash] != '/' && last_slash > 0) {
-//            printf("%s, ", &path[last_slash]);
             last_slash--;
           }
-//          printf("last_slash = %d\n", last_slash);
           if (last_slash != 0) {
             memset(path + last_slash + 1, 0, strlen(path) - last_slash);
             memmove(path + last_slash + 1, target, strlen(target));
@@ -371,13 +366,11 @@ sys_open(void)
         }
 
         if((ip = namei(path)) == 0){
-//          printf("open: can't find %s\n", path);
           end_op();
           return -5;
         }
 
         ilock(ip);
-//        printf("open: read %s, type = %d\n", path, ip->type);
       }
     }
     if(ip->type == T_DIR && omode != O_RDONLY && omode != O_NOFOLLOW){
@@ -568,7 +561,6 @@ uint64 sys_symlink(void) {
     end_op();
     return -1;
   }
-//  printf("symlink: target = `%s`, strlen(target) = %d\n", target, strlen(target));
   if (writei(inode, 0, (uint64)target, 0, strlen(target)) < strlen(target)) {
     return -2;
   }
@@ -594,9 +586,9 @@ int readlink(const char* filename, char* buf, int user) {
   }
 
   ilock(inode);
-//  printf("readlink: inode->inum = %d, inode->size = %d\n", inode->inum, inode->size);
+
   int read = readi(inode, user, (uint64)buf, 0, inode->size);
-//  printf("readlink: read = %d\n", read);
+
   if (read != inode->size) {
     return -2;
   }

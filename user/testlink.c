@@ -30,7 +30,6 @@ void read_data(const char *filename, int expected) {
   check(fd, expected, "Could not open file");
   check(read(fd, data_buf, DATA_SIZE), expected, "Could not read");
   data_buf[DATA_SIZE - 1] = 0;
-  //  printf("read_data: buf = `%s`\n", data_buf);
 }
 
 void arrange(const char *dir) {
