@@ -12,27 +12,6 @@
 
 uint64 next(uint64 current) { return current * 239 + 42; }
 
-void bin(uint64 number) {
-  for (int i = 8 * sizeof(number) - 1; i >= 0; --i) {
-    printf("%d", (number & ((uint64)1 << i)) >> i);
-  }
-}
-
-void print_buf(uint64* buf) {
-  printf("buffer:");
-  for (uint j = 0; j < BUFSIZE; ++j) {
-    printf(" %l", buf[j]);
-  }
-  printf("\n");
-
-  printf("buffer (raw):");
-  for (uint j = 0; j < BUFSIZE; ++j) {
-    printf(" ");
-    bin(buf[j]);
-  }
-  printf("\n");
-}
-
 int main(int argc, char *argv[]) {
   if (argc != 3) {
     fprintf(1, "Usage: test_lf {size} {first}\n");
@@ -54,36 +33,26 @@ int main(int argc, char *argv[]) {
   int status;
   for (uint i = 0; i < ints_in(size); ++i) {
     buf[i % BUFSIZE] = current;
-    printf("buf[%d % %d] = %d\n", i, BUFSIZE, current);
     current = next(current);
 
     if (i > 0 && (i + 1) % BUFSIZE == 0) {
-      print_buf(buf);
       status = write(fd, buf, BUFSIZE_B);
       if (status != BUFSIZE_B) {
         fprintf(1, "Error: could not write to file\n");
         close(fd);
         exit(2);
       }
-      printf("wrote %d bytes to file\n", BUFSIZE_B);
-      // memset(buf, 0, BUFSIZE_B);
     }
   }
 
   if (size % BUFSIZE_B) {
     buf[ints_in(size) % BUFSIZE] = current;
-    uint64 buf_copy[BUFSIZE];
-    memcpy(buf_copy, buf, size % BUFSIZE_B);
-    print_buf(buf);
-    printf("copy ");
-    print_buf(buf_copy);
     status = write(fd, (uint8*)buf, size % BUFSIZE_B);
     if (status != size % BUFSIZE_B) {
       fprintf(1, "Error: could not write to file\n");
       close(fd);
       exit(2);
     }
-    printf("wrote (another) %d bytes to file\n", size % BUFSIZE_B);
   }
 
   close(fd);
@@ -101,9 +70,6 @@ int main(int argc, char *argv[]) {
     uint to_read = size - processed >= BUFSIZE_B ? BUFSIZE_B : size % BUFSIZE_B;
     memset(buf, 0, BUFSIZE_B);
     status = read(fd, (uint8*)buf, to_read);
-    printf("to_read = %d, to_read / sizeof(current) = %d\n", to_read,
-           ints_in(to_read));
-    print_buf(buf);
     if (status < to_read) {
       fprintf(1, "Error: could not read from file\n");
       close(fd);
@@ -113,11 +79,6 @@ int main(int argc, char *argv[]) {
     for (uint i = 0; i < ints_in(to_read); ++i) {
       if (buf[i] == current) {
         good += sizeof(current);
-      } else {
-        printf("???\n");
-        bin(buf[i]); printf("\n");
-        bin(current); printf("\n");
-        printf("???\n");
       }
       current = next(current);
     }
