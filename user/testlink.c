@@ -115,38 +115,36 @@ void test9() {
 }
 
 void test10() {
-    arrange("/");
+  arrange("/");
 
-    symlink("no_file", "l_nofile_abs");
-    return read_data("l_nofile_abs", -1);
+  symlink("no_file", "l_nofile_abs");
+  read_data("l_nofile_abs", -1);
 }
 
 void test11() {
   arrange("/");
 
   symlink("./f3", "l_wrong_rel");
-  return read_data("l_wrong_rel", -1);
+  read_data("l_wrong_rel", -1);
 }
 
 void test12() {
   arrange("/d1/d2/d3");
 
   symlink("../../../f3", "l_wrel_up");
-  return read_data("l_wrel_up", -1);
+  read_data("l_wrel_up", -1);
 }
 
 void test13() {
   arrange("/");
 
   symlink("./d1/d2/d3/f0", "l_wrel_down");
-  return read_data("l_wrel_down", -1);
+  read_data("l_wrel_down", -1);
 }
 
-static void (*tests[TESTS_COUNT])(void) = {
-    test1, test2, test3, test4,  test5,  test6,
-    test7, test8, test9, test10, test11, test12,
-    test13
-};
+static void (*tests[TESTS_COUNT])(void) = {test1,  test2,  test3, test4, test5,
+                                           test6,  test7,  test8, test9, test10,
+                                           test11, test12, test13};
 
 static char *test_names[TESTS_COUNT] = {
     "correct absolute",

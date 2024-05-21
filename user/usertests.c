@@ -19,7 +19,7 @@
 
 #define BUFSZ  ((MAXOPBLOCKS+2)*BSIZE)
 
-char data_buf[BUFSZ];
+char buf[BUFSZ];
 
 //
 // Section with tests that run fairly quickly.  Use -q if you want to
@@ -562,7 +562,7 @@ writetest(char *s)
     printf("%s: error: open small failed!\n", s);
     exit(1);
   }
-  i = read(fd, data_buf, N*SZ*2);
+  i = read(fd, buf, N*SZ*2);
   if(i != N*SZ*2){
     printf("%s: read failed\n", s);
     exit(1);
@@ -587,8 +587,8 @@ writebig(char *s)
   }
 
   for(i = 0; i < MAXFILE; i++){
-    ((int*)data_buf)[0] = i;
-    if(write(fd, data_buf, BSIZE) != BSIZE){
+    ((int*)buf)[0] = i;
+    if(write(fd, buf, BSIZE) != BSIZE){
       printf("%s: error: write big file failed\n", s, i);
       exit(1);
     }
@@ -604,7 +604,7 @@ writebig(char *s)
 
   n = 0;
   for(;;){
-    i = read(fd, data_buf, BSIZE);
+    i = read(fd, buf, BSIZE);
     if(i == 0){
       if(n == MAXFILE - 1){
         printf("%s: read only %d blocks from big", s, n);
@@ -615,9 +615,9 @@ writebig(char *s)
       printf("%s: read failed %d\n", s, i);
       exit(1);
     }
-    if(((int*)data_buf)[0] != n){
+    if(((int*)buf)[0] != n){
       printf("%s: read content of block %d is %d\n", s,
-             n, ((int*)data_buf)[0]);
+             n, ((int*)buf)[0]);
       exit(1);
     }
     n++;
@@ -749,8 +749,8 @@ pipe1(char *s)
     close(fds[0]);
     for(n = 0; n < N; n++){
       for(i = 0; i < SZ; i++)
-        data_buf[i] = seq++;
-      if(write(fds[1], data_buf, SZ) != SZ){
+        buf[i] = seq++;
+      if(write(fds[1], buf, SZ) != SZ){
         printf("%s: pipe1 oops 1\n", s);
         exit(1);
       }
@@ -760,17 +760,17 @@ pipe1(char *s)
     close(fds[1]);
     total = 0;
     cc = 1;
-    while((n = read(fds[0], data_buf, cc)) > 0){
+    while((n = read(fds[0], buf, cc)) > 0){
       for(i = 0; i < n; i++){
-        if((data_buf[i] & 0xff) != (seq++ & 0xff)){
+        if((buf[i] & 0xff) != (seq++ & 0xff)){
           printf("%s: pipe1 oops 2\n", s);
           return;
         }
       }
       total += n;
       cc = cc * 2;
-      if(cc > sizeof(data_buf))
-        cc = sizeof(data_buf);
+      if(cc > sizeof(buf))
+        cc = sizeof(buf);
     }
     if(total != N * SZ){
       printf("%s: pipe1 oops 3 total %d\n", total);
@@ -856,7 +856,7 @@ preempt(char *s)
   }
 
   close(pfds[1]);
-  if(read(pfds[0], data_buf, sizeof(data_buf)) != 1){
+  if(read(pfds[0], buf, sizeof(buf)) != 1){
     printf("%s: preempt read error", s);
     return;
   }
@@ -1172,9 +1172,9 @@ fourfiles(char *s)
         exit(1);
       }
 
-      memset(data_buf, '0'+pi, SZ);
+      memset(buf, '0'+pi, SZ);
       for(i = 0; i < N; i++){
-        if((n = write(fd, data_buf, SZ)) != SZ){
+        if((n = write(fd, buf, SZ)) != SZ){
           printf("write failed %d\n", n);
           exit(1);
         }
@@ -1194,9 +1194,9 @@ fourfiles(char *s)
     fname = names[i];
     fd = open(fname, 0);
     total = 0;
-    while((n = read(fd, data_buf, sizeof(data_buf))) > 0){
+    while((n = read(fd, buf, sizeof(buf))) > 0){
       for(j = 0; j < n; j++){
-        if(data_buf[j] != '0'+i){
+        if(buf[j] != '0'+i){
           printf("wrong char\n", s);
           exit(1);
         }
@@ -1313,15 +1313,15 @@ unlinkread(char *s)
   write(fd1, "yyy", 3);
   close(fd1);
 
-  if(read(fd, data_buf, sizeof(data_buf)) != SZ){
+  if(read(fd, buf, sizeof(buf)) != SZ){
     printf("%s: unlinkread read failed", s);
     exit(1);
   }
-  if(data_buf[0] != 'h'){
+  if(buf[0] != 'h'){
     printf("%s: unlinkread wrong data\n", s);
     exit(1);
   }
-  if(write(fd, data_buf, 10) != 10){
+  if(write(fd, buf, 10) != 10){
     printf("%s: unlinkread write failed\n", s);
     exit(1);
   }
@@ -1365,7 +1365,7 @@ linktest(char *s)
     printf("%s: open lf2 failed\n", s);
     exit(1);
   }
-  if(read(fd, data_buf, sizeof(data_buf)) != SZ){
+  if(read(fd, buf, sizeof(buf)) != SZ){
     printf("%s: read lf2 failed\n", s);
     exit(1);
   }
@@ -1561,8 +1561,8 @@ subdir(char *s)
     printf("%s: open dd/dd/../ff failed\n", s);
     exit(1);
   }
-  cc = read(fd, data_buf, sizeof(data_buf));
-  if(cc != 2 || data_buf[0] != 'f'){
+  cc = read(fd, buf, sizeof(buf));
+  if(cc != 2 || buf[0] != 'f'){
     printf("%s: dd/dd/../ff wrong content\n", s);
     exit(1);
   }
@@ -1604,7 +1604,7 @@ subdir(char *s)
     printf("%s: open dd/dd/ffff failed\n", s);
     exit(1);
   }
-  if(read(fd, data_buf, sizeof(data_buf)) != 2){
+  if(read(fd, buf, sizeof(buf)) != 2){
     printf("%s: read dd/dd/ffff wrong len\n", s);
     exit(1);
   }
@@ -1713,7 +1713,7 @@ bigwrite(char *s)
     }
     int i;
     for(i = 0; i < 2; i++){
-      int cc = write(fd, data_buf, sz);
+      int cc = write(fd, buf, sz);
       if(cc != sz){
         printf("%s: write(%d) ret %d\n", s, sz, cc);
         exit(1);
@@ -1738,8 +1738,8 @@ bigfile(char *s)
     exit(1);
   }
   for(i = 0; i < N; i++){
-    memset(data_buf, i, SZ);
-    if(write(fd, data_buf, SZ) != SZ){
+    memset(buf, i, SZ);
+    if(write(fd, buf, SZ) != SZ){
       printf("%s: write bigfile failed\n", s);
       exit(1);
     }
@@ -1753,7 +1753,7 @@ bigfile(char *s)
   }
   total = 0;
   for(i = 0; ; i++){
-    cc = read(fd, data_buf, SZ/2);
+    cc = read(fd, buf, SZ/2);
     if(cc < 0){
       printf("%s: read bigfile failed\n", s);
       exit(1);
@@ -1764,7 +1764,7 @@ bigfile(char *s)
       printf("%s: short read bigfile\n", s);
       exit(1);
     }
-    if(data_buf[0] != i/2 || data_buf[SZ/2-1] != i/2){
+    if(buf[0] != i/2 || buf[SZ/2-1] != i/2){
       printf("%s: read bigfile wrong data\n", s);
       exit(1);
     }
@@ -2356,7 +2356,7 @@ fsfull()
     }
     int total = 0;
     while(1){
-      int cc = write(fd, data_buf, BSIZE);
+      int cc = write(fd, buf, BSIZE);
       if(cc < BSIZE)
         break;
       total += cc;
@@ -2713,8 +2713,8 @@ manywrites(char *s)
             printf("%s: cannot create %s\n", s, name);
             exit(1);
           }
-          int sz = sizeof(data_buf);
-          int cc = write(fd, data_buf, sz);
+          int sz = sizeof(buf);
+          int cc = write(fd, buf, sz);
           if(cc != sz){
             printf("%s: write(%d) ret %d\n", s, sz, cc);
             exit(1);

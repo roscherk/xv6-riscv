@@ -76,7 +76,7 @@ ls(char *path)
         continue;
       memmove(p, de.name, DIRSIZ);
       p[DIRSIZ] = 0;
-//      printf("DEBUG: path = `%s`, data_buf = `%s`, p = `%s`\n", path, data_buf, p);
+//      printf("DEBUG: path = `%s`, buf = `%s`, p = `%s`\n", path, buf, p);
       if(lstat(buf, &st) < 0){
         printf("ls: cannot stat %s\n", buf);
         continue;

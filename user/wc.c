@@ -2,7 +2,7 @@
 #include "kernel/stat.h"
 #include "user/user.h"
 
-char data_buf[512];
+char buf[512];
 
 void
 wc(int fd, char *name)
@@ -12,12 +12,12 @@ wc(int fd, char *name)
 
   l = w = c = 0;
   inword = 0;
-  while((n = read(fd, data_buf, sizeof(data_buf))) > 0){
+  while((n = read(fd, buf, sizeof(buf))) > 0){
     for(i=0; i<n; i++){
       c++;
-      if(data_buf[i] == '\n')
+      if(buf[i] == '\n')
         l++;
-      if(strchr(" \r\t\n\v", data_buf[i]))
+      if(strchr(" \r\t\n\v", buf[i]))
         inword = 0;
       else if(!inword){
         w++;
