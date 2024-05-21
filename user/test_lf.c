@@ -2,18 +2,33 @@
 #include "kernel/types.h"
 #include "user/user.h"
 
-#define MOD ((uint64)1 << 31)
+
+//#define MOD ((uint64)1 << 31)
 #define FILENAME "large_file"
 #define BUFSIZE 8
 #define BUFSIZE_B (BUFSIZE * sizeof(uint64)) // in bytes
-#define ints_in(size) (size / sizeof(uint64) + (size % sizeof(uint64) ? 1 : 0))
+#define ints_in(size) (size / sizeof(uint64))
+#define remainder(size) (size % sizeof(uint64))
 
-uint64 next(uint64 current) { return (current * 239 + 42) % MOD; }
+uint64 next(uint64 current) { return current * 239 + 42; }
+
+void bin(uint64 number) {
+  for (int i = 8 * sizeof(number) - 1; i >= 0; --i) {
+    printf("%d", (number & ((uint64)1 << i)) >> i);
+  }
+}
 
 void print_buf(uint64* buf) {
   printf("buffer:");
   for (uint j = 0; j < BUFSIZE; ++j) {
     printf(" %l", buf[j]);
+  }
+  printf("\n");
+
+  printf("buffer (raw):");
+  for (uint j = 0; j < BUFSIZE; ++j) {
+    printf(" ");
+    bin(buf[j]);
   }
   printf("\n");
 }
@@ -42,7 +57,7 @@ int main(int argc, char *argv[]) {
     printf("buf[%d % %d] = %d\n", i, BUFSIZE, current);
     current = next(current);
 
-    if (i > 0 && i % (BUFSIZE - 1) == 0) {
+    if (i > 0 && (i + 1) % BUFSIZE == 0) {
       print_buf(buf);
       status = write(fd, buf, BUFSIZE_B);
       if (status != BUFSIZE_B) {
@@ -51,13 +66,18 @@ int main(int argc, char *argv[]) {
         exit(2);
       }
       printf("wrote %d bytes to file\n", BUFSIZE_B);
-      memset(buf, 0, BUFSIZE_B);
+      // memset(buf, 0, BUFSIZE_B);
     }
   }
 
   if (size % BUFSIZE_B) {
+    buf[ints_in(size) % BUFSIZE] = current;
+    uint64 buf_copy[BUFSIZE];
+    memcpy(buf_copy, buf, size % BUFSIZE_B);
     print_buf(buf);
-    status = write(fd, buf, size % BUFSIZE_B);
+    printf("copy ");
+    print_buf(buf_copy);
+    status = write(fd, (uint8*)buf, size % BUFSIZE_B);
     if (status != size % BUFSIZE_B) {
       fprintf(1, "Error: could not write to file\n");
       close(fd);
@@ -78,9 +98,9 @@ int main(int argc, char *argv[]) {
   current = (uint64)first;
 
   while (processed != size) {
-    uint to_read = size - processed > BUFSIZE_B ? BUFSIZE_B : size % BUFSIZE_B;
+    uint to_read = size - processed >= BUFSIZE_B ? BUFSIZE_B : size % BUFSIZE_B;
     memset(buf, 0, BUFSIZE_B);
-    status = read(fd, buf, to_read);
+    status = read(fd, (uint8*)buf, to_read);
     printf("to_read = %d, to_read / sizeof(current) = %d\n", to_read,
            ints_in(to_read));
     print_buf(buf);
@@ -91,12 +111,21 @@ int main(int argc, char *argv[]) {
     }
     processed += to_read;
     for (uint i = 0; i < ints_in(to_read); ++i) {
-      printf("%l == %l, ", buf[i], current);
       if (buf[i] == current) {
         good += sizeof(current);
+      } else {
+        printf("???\n");
+        bin(buf[i]); printf("\n");
+        bin(current); printf("\n");
+        printf("???\n");
       }
-      printf("next(current) = %l, hands = %l\n", next(current), current * 239 + 42);
       current = next(current);
+    }
+    if (to_read % sizeof(current)) {
+      current &= ((uint64)1 << (8 * (to_read % sizeof(current)))) - 1;
+      if (buf[ints_in(to_read)] == current) {
+        good += to_read % sizeof(current);
+      }
     }
   }
 
