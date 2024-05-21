@@ -3,12 +3,10 @@
 #include "user/user.h"
 
 
-//#define MOD ((uint64)1 << 31)
 #define FILENAME "large_file"
-#define BUFSIZE 8
+#define BUFSIZE 256
 #define BUFSIZE_B (BUFSIZE * sizeof(uint64)) // in bytes
 #define ints_in(size) (size / sizeof(uint64))
-#define remainder(size) (size % sizeof(uint64))
 
 uint64 next(uint64 current) { return current * 239 + 42; }
 
@@ -91,6 +89,7 @@ int main(int argc, char *argv[]) {
   }
 
   close(fd);
+  free(buf);
 
   printf("bytes written: %d, processed: %d, good: %d\n", size, processed, good);
   if (processed == size && processed == good) {
@@ -98,6 +97,5 @@ int main(int argc, char *argv[]) {
     exit(0);
   }
   fprintf(1, "Oh what the... %d bad bytes!\n", processed - good);
-  free(buf);
   exit(4);
 }
