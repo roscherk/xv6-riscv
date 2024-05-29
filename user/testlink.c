@@ -35,13 +35,13 @@ void read_data(const char *filename, int expected) {
 void arrange(const char *dir) {
   memset(name_buf, 0, MAXPATH);
   memset(data_buf, 0, DATA_SIZE);
-  chdir(dir);
+  check(chdir(dir), 0, "Could not change dir");
 }
 
 void test1() {
   arrange("/");
 
-  symlink("/f0", "l0_abs");
+  check(symlink("/f0", "l0_abs"), 0, "Could not create symlink /f0 --> l0_abs");
   check(readlink("l0_abs", name_buf), 0, "Readlink error");
 
   read_data("l0_abs", 0);
@@ -51,7 +51,7 @@ void test1() {
 void test2() {
   arrange("/");
 
-  symlink("./f0", "l0_rel");
+  check(symlink("./f0", "l0_rel"), 0, "Could not create symlink ./f0 --> l0_rel");
   check(readlink("l0_rel", name_buf), 0, "Readlink error");
 
   read_data("l0_rel", 0);
@@ -61,7 +61,7 @@ void test2() {
 void test3() {
   arrange("/d1/d2/d3");
 
-  symlink("../../../f0", "l0_rel_up");
+  check(symlink("../../../f0", "l0_rel_up"), 0, "Could not create symlink ../../../f0 --> l0_rel_up");
   read_data("l0_rel_up", 0);
   check(strcmp(data_buf, data), 0, "Contents do not match");
 }
@@ -69,7 +69,7 @@ void test3() {
 void test4() {
   arrange("/");
 
-  symlink("./d1/d2/d3/f3", "l3_rel_down");
+  check(symlink("./d1/d2/d3/f3", "l3_rel_down"), 0, "Could not create symlink ./d1/d2/d3/f3 --> l3_rel_down");
   read_data("l3_rel_down", 0);
   check(strcmp(data_buf, data), 0, "Contents do not match");
 }
@@ -77,7 +77,7 @@ void test4() {
 void test5() {
   arrange("/d1");
 
-  symlink("/l0_abs", "l0_abs2abs");
+  check(symlink("/l0_abs", "l0_abs2abs"), 0, "Could not create symlink /l0_abs --> l0_abs2abs");
   read_data("l0_abs2abs", 0);
   check(strcmp(data_buf, data), 0, "Contents do not match");
 }
@@ -85,7 +85,7 @@ void test5() {
 void test6() {
   arrange("/");
 
-  symlink("/l0_rel", "l0_abs2rel");
+  check(symlink("/l0_rel", "l0_abs2rel"), 0, "Could not create symlink /l0_rel --> l0_abs2rel");
   read_data("l0_abs2rel", 0);
   check(strcmp(data_buf, data), 0, "Contents do not match");
 }
@@ -93,7 +93,7 @@ void test6() {
 void test7() {
   arrange("/d1");
 
-  symlink("../l0_rel", "l0_rel2rel");
+  check(symlink("../l0_rel", "l0_rel2rel"), 0, "Could not create symlink ../l0_rel --> l0_rel2rel");
   read_data("l0_rel2rel", 0);
   check(strcmp(data_buf, data), 0, "Contents do not match");
 }
@@ -101,44 +101,44 @@ void test7() {
 void test8() {
   arrange("/");
 
-  symlink("l_inf_rec", "l_inf_rec");
+  check(symlink("l_inf_rec", "l_inf_rec"), 0, "Could not create symlink l_inf_rec --> l_inf_rec");
   return read_data("l_inf_rec", -1);
 }
 
 void test9() {
   arrange("/");
 
-  symlink("l0_rec", "l1_rec");
-  symlink("l1_rec", "l2_rec");
-  symlink("l2_rec", "l0_rec");
+  check(symlink("l0_rec", "l1_rec"), 0, "Could not create symlink l0_rec --> l1_rec");
+  check(symlink("l1_rec", "l2_rec"), 0, "Could not create symlink l1_rec --> l2_rec");
+  check(symlink("l2_rec", "l0_rec"), 0, "Could not create symlink l2_rec --> l0_rec");
   return read_data("l0_rec", -1);
 }
 
 void test10() {
   arrange("/");
 
-  symlink("no_file", "l_nofile_abs");
+  check(symlink("no_file", "l_nofile_abs"), 0, "Could not create symlink no_file --> l_nofile_abs");
   read_data("l_nofile_abs", -1);
 }
 
 void test11() {
   arrange("/");
 
-  symlink("./f3", "l_wrong_rel");
+  check(symlink("./f3", "l_wrong_rel"), 0, "Could not create symlink ./f3 --> l_wrong_rel");
   read_data("l_wrong_rel", -1);
 }
 
 void test12() {
   arrange("/d1/d2/d3");
 
-  symlink("../../../f3", "l_wrel_up");
+  check(symlink("../../../f3", "l_wrel_up"), 0, "Could not create symlink ../../../f3 --> l_wrel_up");
   read_data("l_wrel_up", -1);
 }
 
 void test13() {
   arrange("/");
 
-  symlink("./d1/d2/d3/f0", "l_wrel_down");
+  check(symlink("./d1/d2/d3/f0", "l_wrel_down"), 0, "Could not create symlink ./d1/d2/d3/f0 --> l_wrel_down");
   read_data("l_wrel_down", -1);
 }
 
@@ -169,9 +169,9 @@ void run_test(uint index) {
 }
 
 void make_files() {
-  mkdir("d1");
-  mkdir("d1/d2");
-  mkdir("d1/d2/d3");
+  check(mkdir("d1"), 0, "Could not make dir `d1`");
+  check(mkdir("d1/d2"), 0, "Could not make dir `d1/d2`");
+  check(mkdir("d1/d2/d3"), 0, "Could not make dir `d1/d2/d3`");
   makefile("f0");
   makefile("d1/d2/d3/f3");
 }
