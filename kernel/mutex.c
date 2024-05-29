@@ -39,46 +39,58 @@ int mutex_create(void) {
       }
     }
     releasesleep(&mutex->lock);
-    if (md != -1)
+    if (md != -1) {
       break;
+    }
   }
   release(&mtable_lock);
   return md;
 }
 
-int check_md(int md) {
-  return md < 0 || md >= NOMUTEX ? -1 : md;
-}
+int check_md(int md) { return md < 0 || md >= NOMUTEX ? -1 : md; }
 
 int mutex_lock(int md) {
-  if (check_md(md) < 0)
+  if (check_md(md) < 0) {
     return -1;
+  }
   acquiresleep(&myproc()->omutex[md]->lock);
   return 0;
 }
 
 int mutex_unlock(int md) {
-  if (check_md(md) < 0)
+  if (check_md(md) < 0) {
     return -1;
+  }
   releasesleep(&myproc()->omutex[md]->lock);
   return 0;
 }
 
 int mutex_release(int md) {
-  if (check_md(md) < 0)
+  if (check_md(md) < 0) {
     return -1;
+  }
+  acquire(&mtable_lock);
   mutex_t *mutex = myproc()->omutex[md];
-  releasesleep(&mutex->lock);
   mutex->dcount--;
+  if (mutex->dcount == 0) {
+    releasesleep(&mutex->lock);
+  }
+  release(&mtable_lock);
   return 0;
 }
 
 mutex_t *mutex_dup(mutex_t *mutex) {
+  acquire(&mtable_lock);
   mutex->dcount++;
+  release(&mtable_lock);
   return mutex;
 }
 
-void mutex_close(mutex_t *mutex) { mutex->dcount--; }
+void mutex_close(mutex_t *mutex) {
+  acquire(&mtable_lock);
+  mutex->dcount--;
+  release(&mtable_lock);
+}
 
 int sys_mutex_create(void) { return mutex_create(); }
 
