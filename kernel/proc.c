@@ -39,7 +39,7 @@ int ps_listinfo(void) {
     for (struct proc* proc_ptr = proc; proc_ptr < &proc[NPROC]; ++proc_ptr) {
         acquire(&(proc_ptr->lock));
         if (proc_ptr->state != UNUSED) {
-            if (proc_count > lim) {
+            if (plist != 0 && proc_count > lim) {
                 release(&(proc_ptr->lock));
                 return -1;
             }
